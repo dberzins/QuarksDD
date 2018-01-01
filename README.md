@@ -87,10 +87,14 @@ struct SomeStruct
 
     // Operations
     bool32 Init() {
+        bool32 result = false;
         if (!initialized) {
             // Do some init staff if needed
             initilaized = true;
+            result = true;
         }
+
+        return result;
     }
 
     void Free() {
