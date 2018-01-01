@@ -1,0 +1,5 @@
+.vscode/
+build/
+deps/
+tests/data/Big*.json
+tests/data/Big*.json

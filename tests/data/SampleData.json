@@ -1,0 +1,11 @@
+{
+    "Integer1": 1,
+    "Float1": 1.001,
+    "String1": "Hello some string",
+    "Objec1": {
+        "field1" : 1111, 
+        "field2" : 2222, 
+        "field3" : 2333
+    },
+    "Array1": ["1", "2", "3"]
+}

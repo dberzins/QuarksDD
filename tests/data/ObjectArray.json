@@ -1,0 +1,17 @@
+[
+    {
+        "field1" : 1, 
+        "field2" : 2, 
+        "field3" : 3
+    },
+    {
+        "field1" : 4, 
+        "field2" : 5, 
+        "field3" : 6
+    },
+    {
+        "field1" : 7, 
+        "field2" : 8, 
+        "field3" : 9
+    }
+]

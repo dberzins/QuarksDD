@@ -1,0 +1,11 @@
+{
+    "Object1": {
+        "NestedObject1": {
+            "NestedObject2": {
+                "field1" : 1111, 
+                "field2" : 2222, 
+                "field3" : 3333
+            }
+        }
+    }
+}
