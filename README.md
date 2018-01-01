@@ -4,7 +4,7 @@
 
 # QuarksDD
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Simple educational library for generic data structures written in C and C++: 
 * Memory managment
