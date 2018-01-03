@@ -251,7 +251,7 @@ int32 CompareHashItemsPos(void* item1, void* item2)
    return result;
 }
 
-// NOTE: Retuns hastable items in random order!
+// NOTE: Retuns hastable items in sorted order!
 HashtableIterator* Hashtable::GetIteratorSorted(SortOrder order) 
 {
 

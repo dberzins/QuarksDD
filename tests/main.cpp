@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "Tests.h"
+#include "TestStack.cpp"
 #include "TestArray.cpp"
 #include "TestHashtable.cpp"
 #include "TestMemory.cpp"
@@ -19,6 +20,7 @@ namespace QuarksDD {
 int32 main(int32 argc, char **argv)
 {
     TestMemory::Run();
+    TestStack::Run();
     TestArray::Run();
     TestHashtable::Run();
     TestJson::Run();

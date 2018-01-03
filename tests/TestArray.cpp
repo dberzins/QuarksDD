@@ -13,8 +13,6 @@ namespace TestArray
 
 internal uint32 ArrayInit()
 {
-    MemoryArena arena2 {};
-    MemoryArena arena = {};
     uint32 testSize = 10;
 
     Array a = {};
