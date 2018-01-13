@@ -11,14 +11,23 @@
 
 namespace QuarksDD {
 
+struct ListIterator {
+    ListIterator* next;
+    ListIterator* prev;
+};
+
 // TODO(dainis):
 struct ListItem 
 {
     // Data 
     void* data;
+    ListIterator iterator;
+};
 
-    ListItem* next;
-    ListItem* prev;
+struct PartitionResult {
+    ListIterator* pivot;
+    ListIterator* lo;
+    ListIterator* hi;
 };
 
 // TODO(dainis):
@@ -26,8 +35,49 @@ struct List
 {
     // Data
     bool32 initialized;
-    ListItem* head;
-    ListItem* tail;
+    bool32 sorted;
+    SortOrder order;
+    bool32 useLocalArena;
+    MemoryArena *arena;
+
+    uint32 count;
+    ListIterator* head;
+    ListIterator* tail;
+
+    ListIterator* firstFree;
+
+    // Operations
+    CompareFn Compare;
+    bool32  Init(uint32 listSize = 5, bool32 sorted = false, CompareFn Compare = NULL, SortOrder order = SortOrder::Asc);
+    bool32  Init(MemoryArena *arena, bool32 sorted = false, CompareFn Compare = NULL, SortOrder order = SortOrder::Asc);
+    void Free();
+
+    ListItem* AllocateItem();
+    ListItem* Add(void* data);
+    
+    static ListItem* GetItem(ListIterator* iter) {
+        ListItem* result = NULL;
+        if (iter) {
+            result = ContainerOf(iter, ListItem, iterator);
+        }
+        return result;
+    }
+
+    bool32 Attach(ListIterator* pos, ListIterator* iter);
+    bool32 Detach(ListIterator* iter);
+    bool32 Move(ListIterator* pos, ListIterator* iter);
+    bool32 Swap(ListIterator* a, ListIterator* b);
+    
+    ListItem* Insert(ListIterator* pos, void* data);
+    bool32 Remove(ListIterator* iter);
+    bool32 Remove(ListItem* item);
+
+    void Clear();
+    
+    void BubbleSort(CompareFn Compare, SortOrder order);
+    PartitionResult Partition(ListIterator* lo, ListIterator* hi, CompareFn Compare, SortOrder order = SortOrder::Asc);
+    void QuickSort(CompareFn Compare, SortOrder order = SortOrder::Asc);
+    void Sort(CompareFn Compare, SortOrder order = SortOrder::Asc, SortMethod method = SortMethod::QuickSort);
 };
 
 } // namespace

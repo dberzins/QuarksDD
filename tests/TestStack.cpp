@@ -131,7 +131,7 @@ internal uint32 StackClear()
 
 internal void Run()
 {
-    printf("===========================================\n");
+    printf("\n===========================================\n");
     printf("Start Stack test group\n");
     printf("===========================================\n");
     _RunTest(StackInit);

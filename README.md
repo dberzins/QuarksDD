@@ -7,11 +7,12 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Simple educational library for generic data structures written in C and C++: 
-* Memory managment
-* Array
-* Stack
-* Hashtable
-* Json data structures and parser
+* [Memory managment](#memory-managment)
+* [Array](#array)
+* [List](#list)
+* [Stack](#stack)
+* [Hashtable](#hashtable)
+* [Json data structures and parser](#json)
 * etc ...
 
 ## Project goal
@@ -302,6 +303,138 @@ void TestSortedArray()
 
     a.Free();
 
+}
+```
+
+### List
+
+List represents double linked list of `ListItem` elements which holds pointer to arbitary data:
+
+```c
+struct ListItem 
+{
+    // Data 
+    void* data;
+
+    ListIterator iterator;
+}
+```
+
+Usage example:
+
+```c
+    // Create list
+    List l = {};
+    // By default reserves meomry for 5 elments with 5 elements extend factor
+    l.Init();
+
+    // Add some values to array
+    int32 value1 = 1;
+    l.Add(&value1);
+
+    int32 value2 = 2;
+    ListItem* item2 = l.Add(&value2);
+
+    // Insert value3 in front of list
+    int32 value3 = 3;
+    l.Insert(NULL, &value3);
+
+    // Insert value4 in end of list
+    int32 value4 = 4;
+    l.Insert(l.tail, &value4);
+
+    // Insert value5 after value2
+    int32 value5 = 5;
+    l.Insert(&item2->iterator, &value5);
+
+    // Remove value1
+    l.Remove(l.head);
+
+    // Remove value2
+    l.Remove(&item2->iterator);
+
+    // Print list content
+    ListIterator* iter = l.head;
+    while (iter) {
+        int32* value = (int32*)l.GetItem(iter)->data;
+        printf("%d, ", *value);
+
+        iter = iter->next;
+    }
+    // Result: 1, 5, 4
+
+    l.Free();
+
+```
+List intialization with start size:
+
+```c
+    List l = {};
+    // Inits to list of 10 elments with 5 elements extend factor
+    l.Init(10);
+    ...
+```
+List with external memory arena:
+
+```c
+    MemoryArena arena = {};
+    // Arena with starting memory for 100 list items
+    arena.Init(100*sizeof(ListItem));
+
+    List l = {};
+    l.Init(&arena);
+    ...
+
+    l.Free();
+    arena.Free();
+```
+
+List sorting:
+```c
+
+int32 CompareValues(void* v1, void* v2)
+{
+   int32 result = 0;
+
+   int32 value1 = *(Int32*)v1;
+   int32 value2 = *(Int32*)v2;
+
+   if (value1 == value2)
+       result = 0;
+   if (value1 < value2)
+       result = -1;
+   if (value1 > value2)
+       result = 1;
+
+   return result;
+}
+
+void TestListSorting()
+{
+    Array l = {};
+    l.Init();
+
+    // Unsorted values
+    int32 values[] = {3, 5, 2, 1, 4};
+
+    for (uint32 i = 0; i < 5; i++>) {
+        a.Add(&values[i]);
+    }
+
+    // Sort list with ascending sort order
+    a.Sort(CompareValues, SortOrder::Asc, SortMethod::QuickSort);
+
+    // Print list content
+    ListIterator* iter = l.head;
+    while (iter) {
+        int32* value = (int32*)l.GetItem(iter)->data;
+        printf("%d, ", *value);
+
+        iter = iter->next;
+    }
+    // Result: 1, 2, 3, 4, 5
+
+    l.Free();
 }
 ```
 ### Stack

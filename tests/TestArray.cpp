@@ -279,7 +279,7 @@ internal uint32 ArrayInsertAdd()
         }
     }
 
-    _Assert(pass, "{4, 1, 2, 5, 10, 6, 7, 9} = {%s}", result);
+    _Assert(pass, "{6, 1, 4, 3, 10, 2, 3, 5, 8, 7, 9} = {%s}", result);
 
     a.Free();
     return true;
@@ -540,7 +540,7 @@ internal uint32 ArrayItemValueAssigneArena()
 
 internal void Run()
 {
-    printf("===========================================\n");
+    printf("\n===========================================\n");
     printf("Start Array test group\n");
     printf("===========================================\n");
     _RunTest(ArrayInit);

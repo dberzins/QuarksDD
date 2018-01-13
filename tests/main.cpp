@@ -4,6 +4,7 @@
 #include "Tests.h"
 #include "TestStack.cpp"
 #include "TestArray.cpp"
+#include "TestList.cpp"
 #include "TestHashtable.cpp"
 #include "TestMemory.cpp"
 #include "TestJson.cpp"
@@ -21,6 +22,7 @@ int32 main(int32 argc, char **argv)
     TestMemory::Run();
     TestStack::Run();
     TestArray::Run();
+    TestList::Run();
     TestHashtable::Run();
     TestJson::Run();
     
@@ -29,7 +31,7 @@ int32 main(int32 argc, char **argv)
     //     printf("ALL TESTS PASSED\n");
     // }
 
-    printf("-------------------------------------------\n");
+    printf("\n-------------------------------------------\n");
     printf("Tests run: %d\n", stats.total);
     printf("Tests passed: %d\n", stats.passed);
     printf("Tests failed: %d\n", stats.failed);

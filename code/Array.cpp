@@ -302,7 +302,7 @@ void Array::BubbleSort(CompareFn Compare, SortOrder order)
 int32 Array::Partition (int32 lo, int32 hi, CompareFn Compare, SortOrder order)
 {
     ArrayItem* pivot = (items + hi);
-    ArrayItem temp = {};
+    
     int32 i = (lo - 1);
  
     for (int32 j = lo; j <= hi - 1; j++)

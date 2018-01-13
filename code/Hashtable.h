@@ -25,19 +25,8 @@ namespace QuarksDD {
     struct HashtableIterator 
     {
         // Data
-        HashItem* item;
         HashtableIterator* next;
         HashtableIterator* prev;
-
-        // Operations
-        void Init() {
-            item = NULL;
-            next = NULL;
-            prev = NULL;
-        }
-
-        void Add(HashItem* item) {}
-        void Remove(HashItem* item) {}
     };
 
     struct HashItem
@@ -86,6 +75,14 @@ namespace QuarksDD {
 
         HashItem* GetItem(char* key);
         HashItem* GetItem(uint32 index);
+        
+        static HashItem* GetItem(HashtableIterator* iter) {
+            HashItem* result = NULL;
+            if (iter) {
+                result = ContainerOf(iter, HashItem, iterator);
+            }
+            return result;
+        }
 
         void* GetValue(char* key);
         void* GetValue(uint32 index);
@@ -97,6 +94,9 @@ namespace QuarksDD {
 
         HashtableIterator* GetIterator();
         HashtableIterator* GetIteratorSorted(SortOrder order = SortOrder::Asc);
+
+        
+
     private:
         HashItem* AllocateHashItem();
         HashItem* GetHashItem(uint32 index, HashAccess access = HashAccess::ReadOnly);

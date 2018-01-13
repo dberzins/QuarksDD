@@ -351,7 +351,6 @@ HashItem *Hashtable::GetHashItem(uint32 index, HashAccess access)
         {
             item->index = index;
             item->next = NULL;
-            item->iterator.item = item;
             item->pos = maxPos;
            
             maxPos++;

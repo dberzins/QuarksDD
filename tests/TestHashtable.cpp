@@ -733,9 +733,11 @@ internal uint32 TestHashtableGetIterator()
     bool32 pass = true;
     uint32 count = 0;
     while(iter) {
-        uint32 value = *(uint32*)iter->item->data;
+        
+        HashItem* item = table.GetItem(iter);
+        uint32 value = *(uint32*)item->data;
 
-        if (value != iter->item->index) {
+        if (value != item->index) {
             pass = false;
             break;
         }
@@ -752,7 +754,7 @@ internal uint32 TestHashtableGetIterator()
     return true;
 }
 
-internal uint32 HashtableOrder() {
+internal uint32 HashtableSortedIterator() {
     Hashtable table = {};
     table.Init(4);
 
@@ -766,18 +768,28 @@ internal uint32 HashtableOrder() {
     HashtableIterator* iter;
     iter = table.GetIteratorSorted();
 
-    while(iter) {
-        uint32 value = *(uint32*)iter->item->data;
-        printf("%d, ", value);
+    bool32 pass = true;
+    while (iter && iter->next) {
+        uint32 val1 = *(uint32*)table.GetItem(iter)->data;
+        uint32 val2 = *(uint32*)table.GetItem(iter->next)->data;
+
+        if (val1 > val2) {
+            pass = false;
+            break;
+        }
+
         iter = iter->next;
     }
 
+    _Assert(pass == true, "pass == true");
+
+    table.Free();
     return true;
 }
 
 internal void Run()
 {
-    printf("===========================================\n");
+    printf("\n===========================================\n");
     printf("Start Hashtable test group\n");
     printf("===========================================\n");
     _RunTest(TestHashtableInit1);
@@ -807,7 +819,7 @@ internal void Run()
     _RunTest(TestHashtableHasKey);
     _RunTest(TestHashtableHasIndex);
     _RunTest(TestHashtableGetIterator);
-    _RunTest(HashtableOrder);
+    _RunTest(HashtableSortedIterator);
 }
 
 } // namespace

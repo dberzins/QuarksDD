@@ -29,7 +29,7 @@ namespace QuarksDD {
     typedef float real32;
     typedef double real64;
 
-    typedef size_t TypeSize;
+    typedef size_t SizeType;
 
     // Code from: stdint.h
     #define I8Min   (-127i8 - 1)
@@ -60,6 +60,10 @@ namespace QuarksDD {
     #define Minimum(A, B) ((A < B) ? (A) : (B))
     #define Maximum(A, B) ((A > B) ? (A) : (B))
 
+    #define SizeOf(Type, member) ((SizeType) sizeof(((Type *)0)->member))
+    #define OffsetOf(Type, member) ((SizeType)(&((Type *)0)->member)
+    // #define ContainerOf(pointer, Type, member) (Type *)((uint8 *)(pointer) - OffsetOf(Type, member))
+    #define ContainerOf(pointer, Type, member) (Type *)((uint8 *)(pointer) - offsetof(Type, member))
 
     // NOTE: Error handling
     #if QUARKSDD_SLOW
@@ -83,11 +87,12 @@ namespace QuarksDD {
         BubbleSort,
         QuickSort
     };
+    
 
     // NOTE: Rounding functions
     // Code from: https://stackoverflow.com/questions/466204/rounding-up-to-next-power-of-2
     inline uint32 RoundUpToPowerOf2(uint32 v) {
-        v--;
+        v--;    
         for (size_t i = 1; i < sizeof(v) * CHAR_BIT; i *= 2) {
             v |= v >> i;
         }

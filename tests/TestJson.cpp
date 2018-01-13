@@ -220,7 +220,8 @@ internal uint32 JsonObjectArray()
         while (iter) {
             j++;
 
-            JValue* f = (JValue*)iter->item->data;
+            HashItem* item = Hashtable::GetItem(iter);
+            JValue* f = (JValue*)item->data;
             _Assert(f != NULL, "f != NULL");
             _Assert(f->type == JValueType::Integer, "f->type == JValueType::Integer");
            
@@ -237,7 +238,7 @@ internal uint32 JsonObjectArray()
 
 internal void Run()
 {
-    printf("===========================================\n");
+    printf("\n===========================================\n");
     printf("Start Json test group\n");
     printf("===========================================\n");
     _RunTest(JsonObject);

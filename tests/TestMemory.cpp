@@ -457,7 +457,7 @@ internal uint32 TestMemoryResize2()
 
 internal void Run()
 {
-    printf("===========================================\n");
+    printf("\n===========================================\n");
     printf("Start Memory test group\n");
     printf("===========================================\n");
     _RunTest(TestMemoryInit);
