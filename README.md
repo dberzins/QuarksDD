@@ -418,11 +418,11 @@ void TestListSorting()
     int32 values[] = {3, 5, 2, 1, 4};
 
     for (uint32 i = 0; i < 5; i++>) {
-        a.Add(&values[i]);
+        l.Add(&values[i]);
     }
 
     // Sort list with ascending sort order
-    a.Sort(CompareValues, SortOrder::Asc, SortMethod::QuickSort);
+    l.Sort(CompareValues, SortOrder::Asc, SortMethod::QuickSort);
 
     // Print list content
     ListIterator* iter = l.head;
