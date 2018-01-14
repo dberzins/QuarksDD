@@ -57,13 +57,12 @@ namespace QuarksDD {
     #define Pi32 3.14159265359f
     #define Tauint32 6.28318530717958647692f
 
-    #define Minimum(A, B) ((A < B) ? (A) : (B))
-    #define Maximum(A, B) ((A > B) ? (A) : (B))
+    #define Minimum(a, b) ((a < b) ? (a) : (b))
+    #define Maximum(a, b) ((a > b) ? (a) : (b))
 
     #define SizeOf(Type, member) ((SizeType) sizeof(((Type *)0)->member))
-    #define OffsetOf(Type, member) ((SizeType)(&((Type *)0)->member)
-    // #define ContainerOf(pointer, Type, member) (Type *)((uint8 *)(pointer) - OffsetOf(Type, member))
-    #define ContainerOf(pointer, Type, member) (Type *)((uint8 *)(pointer) - offsetof(Type, member))
+    #define OffsetOf(Type, member) ((SizeType)(&((Type *)0)->member))
+    #define ContainerOf(pointer, Type, member) (Type *)((uint8 *)(pointer) - OffsetOf(Type, member))
 
     // NOTE: Error handling
     #if QUARKSDD_SLOW
@@ -93,7 +92,7 @@ namespace QuarksDD {
     // Code from: https://stackoverflow.com/questions/466204/rounding-up-to-next-power-of-2
     inline uint32 RoundUpToPowerOf2(uint32 v) {
         v--;    
-        for (size_t i = 1; i < sizeof(v) * CHAR_BIT; i *= 2) {
+        for (SizeType i = 1; i < sizeof(v) * CHAR_BIT; i *= 2) {
             v |= v >> i;
         }
         return ++v;
@@ -101,12 +100,12 @@ namespace QuarksDD {
 
     // NOTE: Hash functions
     // Code from: https://en.wikipedia.org/wiki/MurmurHash
-    inline uint32 Murmur3x32(const char *key, size_t len, uint32 seed)
+    inline uint32 Murmur3x32(const char *key, SizeType len, uint32 seed)
     {
         uint32 h = seed;
         if (len > 3) {
             const uint32 *key_x4 = (const uint32 *)key;
-            size_t i = len >> 2;
+            SizeType i = len >> 2;
             do {
                 uint32 k = *key_x4++;
                 k *= 0xcc9e2d51;
@@ -119,7 +118,7 @@ namespace QuarksDD {
             key = (const char *)key_x4;
         }
         if (len & 3) {
-            size_t i = len & 3;
+            SizeType i = len & 3;
             uint32 k = 0;
             key = &key[i - 1];
             do {

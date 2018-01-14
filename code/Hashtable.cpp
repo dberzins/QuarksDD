@@ -196,7 +196,7 @@ bool32  Hashtable::HasKey(char* key) {
     return item != NULL;
 }
 
-bool32  Hashtable::HasKey(uint32 index) {
+bool32  Hashtable::HasIndex(uint32 index) {
     HashItem* item = GetItem(index);
     return item != NULL;
 }

@@ -88,7 +88,7 @@ namespace QuarksDD {
         void* GetValue(uint32 index);
 
         bool32 HasKey(char* key);
-        bool32 HasKey(uint32 index);
+        bool32 HasIndex(uint32 index);
 
         bool32 IsEmpty();
 
