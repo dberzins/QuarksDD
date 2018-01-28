@@ -6,18 +6,19 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Simple educational library for generic data structures written in C and C++: 
+Simple educational library for data structures and data managment written in C and C++: 
 * [Memory managment](#memory-managment)
 * [Array](#array)
 * [List](#list)
 * [Stack](#stack)
 * [Hashtable](#hashtable)
 * [Json data structures and parser](#json)
+* Entity Component System
 * etc ...
 
 ## Project goal
 
-Goal of the project is to have educational generic data structures library with ability to have control over memory usage and managment.
+Goal of the project is to have educational data structures data managment library with ability to have control over memory usage and managment.
 Library is used as part for other side project (custom game engine) which will be main driver force for library evolution. 
 
 Library development tends to fallow [Handmade philosophy](https://handmade.network/manifesto).
@@ -736,11 +737,9 @@ Usage example:
 ## Roadmap
 
 Support of other data structure types will fallow:
-* Lists
 * Queues
 * Trees
 * Graphs
-* ECS
 * ... 
 
 

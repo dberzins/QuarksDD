@@ -1,18 +1,21 @@
 #if !defined(QECSTYPES_H)
-#define REDEFINE_ECS_TYPINGS
-#include "..\Entity.h"
 
 enum class SystemType {
-    SampleSystem = 0,
+    Undefined = 0,
+    SampleSystem,
     SampleRenderSystem,
     System_Count
 };
 
 enum class ComponentType {
-    Component1 = 0,
+    Undefined = 0,
+    Component1,
     Component2,
     Component3,
-    Component_Count
+    Component4,
+    Component5,
+    Component6,
+    Component_Count 
 };
 
 #define QECSTYPES_H

@@ -12,7 +12,7 @@ namespace QuarksDD {
     // Defines from: Handmade Hero
     #define ArrayCount(Array) (sizeof(Array) / sizeof((Array)[0]))
 
-    #define Kilobytes(value) (value)*1024LL)
+    #define Kilobytes(value) ((value)*1024LL)
     #define Megabytes(value) (Kilobytes(value)*1024LL)
     #define Gigabytes(value) (Megabytes(value)*1024LL)
     #define Terabytes(value) (Gigabytes(value)*1024LL)
@@ -29,11 +29,13 @@ namespace QuarksDD {
             *byte++ = 0;
         }
     }
+    
+    struct MemoryArena;
 
     struct MemoryBlock {
         // Data
         bool32 initialized;
-
+        bool32 allocated;
         MemorySize size;
         MemorySize used;
         uint8* base;
@@ -41,10 +43,27 @@ namespace QuarksDD {
         MemoryBlock *prev;
         MemoryBlock *next;
 
+        MemoryArena* child;
+        uint32 childCount;
+
         // Operations
         bool32 Init(MemorySize blockSize, bool32 zero = true);
+        bool32 Init(uint8* memory, MemorySize blockSize, bool32 zero = true);
         void Free();
         void* Push(MemorySize pushSize);
+    };
+
+    struct MemoryChunk {
+        MemoryBlock* block;
+        MemorySize start;
+        MemorySize end;
+        MemoryChunk* next;
+    };
+
+    struct MemorySnapshot {
+        MemoryArena* arena;
+        MemoryBlock* block;
+        MemorySize used;
     };
 
     struct MemoryBlockIndex {
@@ -53,30 +72,40 @@ namespace QuarksDD {
         MemoryBlock* block;
     };
 
-    #define ArenaPushStruct(arena, Type) (Type*) ArenaPushSize_(arena, sizeof(Type))
-    #define ArenaPushArray(arena, count, Type) (Type*) ArenaPushSize_(arena, count * sizeof(Type))
+    #define ArenaPushStruct(arena, Type) (Type*) ArenaPushSize_(((MemoryArena*)arena), sizeof(Type))
+    #define ArenaPushArray(arena, count, Type) (Type*) ArenaPushSize_(((MemoryArena*)arena), count * sizeof(Type))
     #define ArenaPushSize(arena, size) (void*) ArenaPushSize_(((MemoryArena*)arena), size)
-    #define ArenaPushSize_(arena, size) (void*) arena->Push(size)
-    
+    #define ArenaPushSize_(arena, size) (void*) ((MemoryArena*)arena)->Push(size)
+
     struct MemoryArena {
         // Data
         bool32 initialized;
         real32 extend;
         uint32 count;
+        int32 snapshots;
         bool32 zero;
         MemoryBlock* block;
+        MemoryChunk* firstFree;
+        uint32 freeCkunkCount;
+        uint32 simpleResizeCount;
+        uint32 resizeCount;
+        MemoryArena *next;
 
         // Operations
         bool32 Init(MemorySize size = 0, bool32 zero = true, real32 extend = 1.0f);
+        bool32 Init(MemoryBlock *arenaBlock, bool32 zero = true, real32 extend = 1.0f);
         void Free(MemoryBlock* freeBlock);
         void Free();
         bool32 Extend(MemorySize size);
         bool32 FitExtend(MemorySize size);
-
         void* Push(MemorySize size);
         MemoryBlockIndex FindBlock(uint8* source);
         bool32 BlockContains(MemoryBlock* testBlock, uint8* source, MemorySize size);
         void* Resize(uint8* source, MemorySize size, MemorySize newSize);
+        MemorySnapshot CreateSnapshot();
+        void Rollback(MemorySnapshot snapshot);
+        MemoryArena* CreateChildArena(MemorySize memSize);
+        bool32 FreeChunk(MemoryBlock* chunkBlock, uint8* source, MemorySize size);
     };
 
 

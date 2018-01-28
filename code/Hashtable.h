@@ -33,6 +33,7 @@ namespace QuarksDD {
     {
         // Data 
         uint32 pos;
+        uint32 slot;
         uint32 index;
         char* key;
         void* data;
@@ -92,10 +93,11 @@ namespace QuarksDD {
 
         bool32 IsEmpty();
 
+        HashItem* GetFirstItem();
+        HashItem* GetNextItem(HashItem* item);
+        
         HashtableIterator* GetIterator();
         HashtableIterator* GetIteratorSorted(SortOrder order = SortOrder::Asc);
-
-        
 
     private:
         HashItem* AllocateHashItem();

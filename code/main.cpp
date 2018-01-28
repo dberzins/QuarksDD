@@ -11,106 +11,143 @@
 #include "Hashtable.h"
 #include "Json\JsonParser.h"
 
-
 #include "ECS\Sample\ECS.h"
 #include "ECS\Entity.h"
+#include "ECS\System.h"
+#include "ECS\EntityManager.h"
 #include "ECS\Sample\SampleComponent.h"
 #include "ECS\Sample\SampleSystem.h"
 #include "ECS\Sample\SampleRenderSystem.h"
 
+// #include <windows.h>
 using namespace QuarksDD;
 
 namespace QuarksDD {
     MemoryStats memStats = {};
 }
-
 int32 main(int32 argc, char **argv)
 {
     printf("Current dir: %s\n", argv[0]);
 
+    // LARGE_INTEGER StartingTime, InitTime, ExecTime, ElapsedMicroseconds;
+    // LARGE_INTEGER Frequency;
+
+    // QueryPerformanceFrequency(&Frequency); 
+    // QueryPerformanceCounter(&StartingTime);
+
+
     EntityManager ecs = {};
-    ecs.Init();
-
-    // Add systems
-    SampleSystem* system1 = NULL;
-    ADD_SYSTEM(ecs, system1, SampleSystem, SystemType::SampleSystem);
-
-    SampleRenderSystem* system2 = NULL;
-    ADD_SYSTEM(ecs, system2, SampleRenderSystem, SystemType::SampleRenderSystem);
-
-    ecs.InitSystems();
-
-    // Add entities
-    {
-        Entity* e = ecs.CreateEntity();
-        if (e) {
-            // Add components
-            {
-                SampleComponent1* c1 = NULL;
-                CREATE_COMPONENT(ecs, c1, SampleComponent1, ComponentType::Component1);
-                c1->prop1 = 1;
-                c1->prop2 = 2;
-                c1->prop3 = 3;
-                ADD_COMPONENT(e, c1);
-
-                // e->AddComponent(&c1->component);
-
-                SampleComponent2* c2 = NULL;
-                CREATE_COMPONENT(ecs, c2, SampleComponent2, ComponentType::Component2);
-                c2->attr1 = 1;
-                c2->attr2 = 2;
-                c2->attr3 = 3;
-                e->AddComponent(&c2->component);
-                
-                SampleComponent3* c3 = NULL;
-                CREATE_COMPONENT(ecs, c3, SampleComponent3, ComponentType::Component3);
-                c3->field1 = 1;
-                c3->field2 = 2;
-                c3->field3 = 3;
-                e->AddComponent(&c3->component);
-
-                // SampleComponent2* c2 = NULL;
-                // ADD_COMPONENT(ecs, e, c2, SampleComponent2, ComponentType::Component2);
-                // SampleComponent3* c3 = NULL;
-                // ADD_COMPONENT(ecs, e, c3, SampleComponent3, ComponentType::Component3);
-                e->RemoveComponent(&c3->component);
-
-                SampleComponent2* cc2 = GET_COMPONENT(&c2->component, SampleComponent2);
-
-                bool32 hasC1 = e->HasComponent((uint32)ComponentType::Component1);
-                bool32 hasC2 = e->HasComponent((uint32)ComponentType::Component2);
-                bool32 hasC3 = e->HasComponent((uint32)ComponentType::Component3);
-                bool32 hasX = e->HasComponent((uint32)ComponentType::Component_Count);
-                bool32 hasY = e->HasComponent((uint32)ComponentType::Component_Count);
-                bool32 hasZ = e->HasComponent((uint32)ComponentType::Component_Count);
-
-            }
-            ecs.AddEntity(e);
-        }
-        // ADD_ENTITY(ecs, e, Entity);
-    }
+    EntityManager::maxComponents = MAX_COMPONENTS;
+    EntityManager::maxEntities = MAX_ENTITIES;
+    EntityManager::maxSystems = MAX_SYSTEMS;
     
-    // {
-    //     Entity* e = NULL;
-    //     AddEntity(ecs, e, Entity);
+    MemoryArena systemArena = {};
+    systemArena.Init(Megabytes(10));
+    
+    MemoryArena entityArena = {};
+    entityArena.Init(Megabytes(30));
+    
+    MemoryArena componentArena = {};
+    componentArena.Init(Megabytes(20));
 
-    //     Add components
-    //     {
-    //         SampleComponent1* c1 = NULL;
-    //         AddComponent(ecs, e, c1, SampleComponent1);
-    //         SampleComponent3* c3 = NULL;
-    //         AddComponent(ecs, e, c3, SampleComponent3);
-    //     }
-    // }
+    ecs.Init(&systemArena, &entityArena, &componentArena);
 
-    // uint32 loopCount = 0;
-    // while (loopCount++ < 10) {
-    //     ecs.Update();
-    // }
-    // Do staff with ecs
+    {
+        SampleSystem* s = CREATE_SYSTEM(&ecs, SampleSystem);
+        Assert(s);
+        ADD_SYSTEM(&ecs, s);
+    }
+    {
+        SampleRenderSystem* s = CREATE_SYSTEM(&ecs, SampleRenderSystem);
+        Assert(s);
+        ADD_SYSTEM(&ecs, s);
+    }
 
+    for (uint32 i = 0; i < EntityManager::maxEntities; i++) {
+        Entity* e = ecs.CreateEntity("Entity");
+        {
+            SampleComponent1* c = CREATE_COMPONENT(e, SampleComponent1);
+            if (c) {
+                *c = {};
+                ADD_COMPONENT(e, ComponentType::Component1, c);
+            }
+        }        
+        {
+            SampleComponent2* c = CREATE_COMPONENT(e, SampleComponent2);
+            if (c) {
+                *c = {};
+                ADD_COMPONENT(e, ComponentType::Component2, c);
+            }
+        }        
+        {
+            SampleComponent3* c = CREATE_COMPONENT(e, SampleComponent3);
+            if (c) {
+                *c = {};
+                ADD_COMPONENT(e, ComponentType::Component3, c);
+            }
+        }        
+        {
+            SampleComponent4* c = CREATE_COMPONENT(e, SampleComponent4);
+            if (c) {
+                *c = {};
+                ADD_COMPONENT(e, ComponentType::Component4, c);
+            }
+        }        
+        {
+            SampleComponent5* c = CREATE_COMPONENT(e, SampleComponent5);
+            if (c) {
+                *c = {};
+                ADD_COMPONENT(e, ComponentType::Component5, c);
+            }
+        }        
+        {
+            SampleComponent6* c = CREATE_COMPONENT(e, SampleComponent6);
+            if (c) {
+                *c = {};
+                ADD_COMPONENT(e, ComponentType::Component6, c);
+            }
+        }        
+
+        ecs.AddEntity(e);
+    }
+
+    // QueryPerformanceCounter(&InitTime);
+    // ElapsedMicroseconds.QuadPart = InitTime.QuadPart - StartingTime.QuadPart;
+    
+    // ElapsedMicroseconds.QuadPart *= 1000000;
+    // ElapsedMicroseconds.QuadPart /= Frequency.QuadPart;
+
+    // real32 elapsedSeconds = (real32)ElapsedMicroseconds.QuadPart/1000000.0f;
+
+    // printf("ECS Init Elapsed: %f (s)\n", elapsedSeconds);
+  
+
+    RenderActionContext ctx = {};
+    ctx.delatatime = 10.f;
+
+    uint32 loopCount = 0;
+    while (loopCount++ < 1) {
+        ecs.Run(Flag32(SystemType::SampleSystem), NULL);
+        ecs.Run(Flag32(SystemType::SampleRenderSystem), &ctx);
+    }
+
+
+    // QueryPerformanceCounter(&ExecTime);
+    // ElapsedMicroseconds.QuadPart = ExecTime.QuadPart - InitTime.QuadPart;
+    
+    // ElapsedMicroseconds.QuadPart *= 1000000;
+    // ElapsedMicroseconds.QuadPart /= Frequency.QuadPart;
+
+    // elapsedSeconds = (real32)ElapsedMicroseconds.QuadPart/1000000.0f;
+
+    // printf("ECS Exec Elapsed: %f (s)\n", elapsedSeconds);
+
+    ecs.Finish();
     ecs.Free();
 
+    systemArena.Free();
+    entityArena.Free();
+    componentArena.Free();
 
 
 

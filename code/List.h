@@ -16,7 +16,6 @@ struct ListIterator {
     ListIterator* prev;
 };
 
-// TODO(dainis):
 struct ListItem 
 {
     // Data 
@@ -30,7 +29,6 @@ struct PartitionResult {
     ListIterator* hi;
 };
 
-// TODO(dainis):
 struct List
 {
     // Data
@@ -54,6 +52,9 @@ struct List
 
     ListItem* AllocateItem();
     ListItem* Add(void* data);
+
+    ListIterator* GetSortedPos(void* data);
+    ListItem* AddSorted(void* data);
     
     static ListItem* GetItem(ListIterator* iter) {
         ListItem* result = NULL;

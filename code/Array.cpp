@@ -21,6 +21,12 @@ bool32  Array::Init(uint32 arraySize, bool32 sorted, CompareFn Compare, SortOrde
         extend = 5;
         size = arraySize + extend;
         
+        // TODO(dainis): This is temporary fix for AddCopy data allocations!
+        // Should thin mor cleraly what to do here
+        arena = (MemoryArena*)Allocate(sizeof(MemoryArena));
+        *arena = {};
+        arena->Init();
+
         // Allocate array memory
         MemorySize memSize = size * sizeof(ArrayItem);
         
@@ -49,7 +55,6 @@ bool32  Array::Init(MemoryArena* arena, uint32 arraySize, bool32 sorted, Compare
         size = arraySize + extend;
 
         this->arena = arena;
-
         items = (ArrayItem*)ArenaPushArray(arena, size, ArrayItem);
         if (items) {
             if (!arena->zero) {
@@ -71,6 +76,9 @@ void Array::Free() {
                 Deallocate(items);
                 items = NULL;
                 size = 0;
+            }
+            if (arena) {
+                arena->Free();
             }
             arena = NULL;
         }
@@ -147,6 +155,38 @@ bool32 Array::Add(void* data) {
 
     return true;
 }
+
+// TODO/NOTE(dainis): This is experimental - Still deciding if should allow data space allocations inside array
+bool32 Array::AddCopy(uint32 data) {
+    bool32 result = false;
+
+    uint32* value  = (uint32*)arena->Push(sizeof(uint32));
+    *value = data;
+    result = Add(value);
+
+    return result;
+}
+
+bool32 Array::AddCopy(int32 data) {
+    bool32 result = false;
+
+    int32* value  = (int32*)arena->Push(sizeof(int32));
+    *value = data;
+    result = Add(value);
+
+    return result;
+}
+
+bool32 Array::AddCopy(real32 data) {
+    bool32 result = false;
+
+    real32* value  = (real32*)arena->Push(sizeof(real32));
+    *value = data;
+    result = Add(value);
+
+    return result;
+}
+
 
 int32 Array::GetSortedPos(void* data) {
     Assert(sorted == true);
@@ -251,6 +291,47 @@ bool32 Array::Remove(uint32 index) {
         *(items + count - 1) = {}; 
         count--;
         result = true;
+    }
+
+    return result;
+}
+
+bool32 Array::Remove(void* matchData, MatchFn Match) {
+    bool32 result = false;
+
+    if (matchData, Match) {
+        uint32 match = 0;
+
+        uint32 lo =0;
+        uint32 hi = count - 1;
+        // Swap match elements to non-match elemtes at the end of array
+        while (lo <= hi) {
+            bool32 matchLo = Match(matchData, (items + lo)->data);
+            if (matchLo) {
+                ++match;
+
+            while (lo < hi) {
+                    bool32 matchHi = Match(matchData, (items + hi)->data);
+                    if (!matchHi) {
+                        Swap(items + lo, items + hi);
+                        --hi;
+                        break;
+                    }
+                    else {
+                        ++match;
+                    }
+                    --hi;
+                } 
+            }
+            ++lo;
+        }
+
+        // Shrink used array from end by empty elemts count
+        Assert(match <= count);
+        if (match > 0 && match <= count) {
+            count -= match;
+            result = true;
+        }
     }
 
     return result;
@@ -379,6 +460,7 @@ void Array::Sort(CompareFn Compare, SortOrder order, SortMethod method)
         }
         case SortMethod::BubbleSort : {
             BubbleSort(Compare, order);
+            break;
         }
     }
 
@@ -387,6 +469,85 @@ void Array::Sort(CompareFn Compare, SortOrder order, SortMethod method)
         this->Compare = Compare;
         this->order = order;
     }
+}
+
+bool32 Array::SearchData(Array* searchResults, void* matchData, MatchFn Match) {
+    bool32 result = false; 
+    if (searchResults && matchData && Match) {
+        for (uint32 i = 0; i < count; i++) {
+            bool32 match = Match(matchData, (items + i)->data);
+
+            if (match) {
+                searchResults->Add((items + i)->data);
+                result = true;
+            }
+        }
+    }
+    return result; 
+}
+
+bool32 Array::SearchPos(Array* searchPositions, void* matchData, MatchFn Match) {
+    bool32 result = false; 
+    if (searchPositions && matchData && Match) {
+        for (uint32 i = 0; i < count; i++) {
+            bool32 match = Match(matchData, (items + i)->data);
+
+            if (match) {
+                searchPositions->AddCopy(i);
+                result = true;
+            }
+        }
+    }
+    return result; 
+}
+
+int32 Array::FindSorted(void* matchData) {
+    int32 result = -1; 
+    if (matchData && Compare) {
+        int32 pos = GetSortedPos(matchData);
+
+        // NOTE: If pos is less than zero then its compare collision 
+        if (pos < 0) {
+            // Restore colision position
+            result = -pos - 1;
+        }
+    }
+    return result; 
+}
+
+int32 Array::Find(void* matchData, CompareFn FindCompare) {
+    int32 result = -1; 
+    if (matchData) {
+        if (sorted && !FindCompare && Compare) {
+            result = FindSorted(matchData);
+        }
+        else if (FindCompare) {
+            for (uint32 i = 0; i < count; i++) {
+                int32 cmp = FindCompare(matchData, (items + i)->data);
+
+                if (cmp == 0) {
+                    result = i;
+                    return result;
+                }
+            }
+        }
+    }
+    return result; 
+}
+
+int32 Array::FindMatch(void* matchData, MatchFn Match) {
+    int32 result = -1; 
+    if (matchData && Match) {
+        for (uint32 i = 0; i < count; i++) {
+            bool32 match = Match(matchData, (items + i)->data);
+
+            if (match) {
+                result = i;
+                return result;
+            }
+        }
+    }
+    return result; 
 }
 
 } // namespace 

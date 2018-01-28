@@ -29,6 +29,24 @@ namespace QuarksDD {
     typedef float real32;
     typedef double real64;
 
+    typedef int8 s8;
+    typedef int8 s08;
+    typedef int16 s16;
+    typedef int32 s32;
+    typedef int64 s64;
+    typedef bool32 b32;
+
+    typedef uint8 u8;
+    typedef uint8 u08;
+    typedef uint16 u16;
+    typedef uint32 u32;
+    typedef uint64 u64;
+
+    typedef real32 r32;
+    typedef real64 r64;
+    typedef real32 f32;
+    typedef real64 f64;
+
     typedef size_t SizeType;
 
     // Code from: stdint.h
@@ -60,9 +78,16 @@ namespace QuarksDD {
     #define Minimum(a, b) ((a < b) ? (a) : (b))
     #define Maximum(a, b) ((a > b) ? (a) : (b))
 
+    #define Flag32(value) (u32) 1UL << (u32)value
+    #define Flag64(value) (u64) 1ULL << (u32)value
+
     #define SizeOf(Type, member) ((SizeType) sizeof(((Type *)0)->member))
     #define OffsetOf(Type, member) ((SizeType)(&((Type *)0)->member))
     #define ContainerOf(pointer, Type, member) (Type *)((uint8 *)(pointer) - OffsetOf(Type, member))
+    // http://www.drdobbs.com/a-portable-typeof-operator/184401310
+    // http://collaboration.cmc.ec.gc.ca/science/rpn/biblio/ddj/Website/articles/CUJ/2000/0011/gibbons/list1.htm
+    // #define TypePtrOfType(Type) decltype((Type *)0)
+    // #define TypeOf(expression) decltype(expression)
 
     // NOTE: Error handling
     #if QUARKSDD_SLOW
@@ -75,6 +100,7 @@ namespace QuarksDD {
 
     // NOTE: Sorting
     typedef int32 (*CompareFn)(void* item1, void* item2);
+    typedef bool32 (*MatchFn)(void* item1, void* item2);
     
     enum class SortOrder {
         Asc,
@@ -98,46 +124,6 @@ namespace QuarksDD {
         return ++v;
     }
 
-    // NOTE: Hash functions
-    // Code from: https://en.wikipedia.org/wiki/MurmurHash
-    inline uint32 Murmur3x32(const char *key, SizeType len, uint32 seed)
-    {
-        uint32 h = seed;
-        if (len > 3) {
-            const uint32 *key_x4 = (const uint32 *)key;
-            SizeType i = len >> 2;
-            do {
-                uint32 k = *key_x4++;
-                k *= 0xcc9e2d51;
-                k = (k << 15) | (k >> 17);
-                k *= 0x1b873593;
-                h ^= k;
-                h = (h << 13) | (h >> 19);
-                h = (h * 5) + 0xe6546b64;
-            } while (--i);
-            key = (const char *)key_x4;
-        }
-        if (len & 3) {
-            SizeType i = len & 3;
-            uint32 k = 0;
-            key = &key[i - 1];
-            do {
-                k <<= 8;
-                k |= *key--;
-            } while (--i);
-            k *= 0xcc9e2d51;
-            k = (k << 15) | (k >> 17);
-            k *= 0x1b873593;
-            h ^= k;
-        }
-        h ^= len;
-        h ^= h >> 16;
-        h *= 0x85ebca6b;
-        h ^= h >> 13;
-        h *= 0xc2b2ae35;
-        h ^= h >> 16;
-        return h;
-    }
 } // namespace
 #define QCOMMON_H
 #endif

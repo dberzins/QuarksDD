@@ -4,6 +4,7 @@
 
 #include "Hashtable.h"
 #include "Array.h"
+#include "Murmur.h"
 
 namespace QuarksDD {
 
@@ -205,6 +206,52 @@ bool32  Hashtable::IsEmpty() {
         return size <= 0;
 }
 
+HashItem* Hashtable::GetFirstItem() {
+    HashItem* result = NULL;
+
+    for (uint32 slot = 0; slot < size; slot++) {
+        HashItem* item = table + slot;
+        if (item && item->index != HASH_ITEM_UNINITIALIZED) {
+            result = item; 
+            return result;
+        }
+    }
+
+    return result;
+}
+
+HashItem* Hashtable::GetNextItem(HashItem* item) {
+    HashItem* result = NULL;
+    if (item) {
+        bool32 found = false;
+        for (uint32 slot = item->slot; slot < size; slot++) {
+            HashItem* testItem = table + slot;
+            
+            if (item == testItem) {
+                found = true;
+            }
+            else if (found && testItem->index != HASH_ITEM_UNINITIALIZED) {
+                result = testItem;
+                return result;
+            }
+
+            while (testItem && testItem->index != HASH_ITEM_UNINITIALIZED) {
+                testItem = item->next;
+                if (item == testItem) {
+                    found = true;
+                }
+                else if (found) {
+                    result = testItem;
+                    return result;
+                }
+                testItem = testItem->next;
+            };
+        }
+    }
+    return result;
+}
+
+
 // NOTE: This retuns hastable items in undefined order!
 HashtableIterator* Hashtable::GetIterator() {
 
@@ -352,6 +399,7 @@ HashItem *Hashtable::GetHashItem(uint32 index, HashAccess access)
             item->index = index;
             item->next = NULL;
             item->pos = maxPos;
+            item->slot = slot;
            
             maxPos++;
             count++;

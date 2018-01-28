@@ -123,7 +123,8 @@ bool32 List::Attach(ListIterator* pos, ListIterator* iter) {
         // if pos NULL then attach as head
         iter->next = head;
         iter->prev = NULL;
-        head->prev = iter;
+        if (head)
+            head->prev = iter;
         head = iter;
     }
 
@@ -235,6 +236,47 @@ void List::Clear() {
     count = 0;
     head = NULL;
     tail = NULL;
+}
+
+ListIterator* List::GetSortedPos(void* data) {
+    Assert(sorted == true);
+    Assert(Compare != NULL);
+    ListIterator* result = NULL;
+
+    ListIterator* iter = tail;
+    if (sorted == true && Compare != NULL) {
+        while (iter) {
+            ListItem* item = List::GetItem(iter);
+            if (item && item->data) {
+                int32 cmp = Compare(data, item->data);
+
+                // Inverse compare result?
+                cmp = (order == SortOrder::Asc) ? cmp : (cmp * -1);
+
+                if (cmp >= 0) {
+                    result = iter->prev;
+                    return result;
+                }
+            }
+            iter = iter->prev;
+        }   
+    }
+  
+    return result;
+}
+
+ListItem* List::AddSorted(void* data) {
+    Assert(sorted == true);
+    Assert(Compare != NULL);
+
+    ListItem* result = NULL;
+
+    if (sorted == true && Compare != NULL) {
+        ListIterator* pos = GetSortedPos(data);
+        result = Insert(pos, data);
+    }
+
+    return result;
 }
 
 void List::BubbleSort(CompareFn Compare, SortOrder order) 
@@ -354,12 +396,12 @@ void List::Sort(CompareFn Compare, SortOrder order, SortMethod method)
         }
         case SortMethod::BubbleSort : {
             BubbleSort(Compare, order);
+            break;
         }
     }
 
     if (sorted) {
         // NOTE: If sorted List then we need update these for AddSorted to work correctly!
-        // TODO(dainis): Implement AddSorted
         this->Compare = Compare;
         this->order = order;
     }

@@ -706,9 +706,9 @@ internal uint32 TestHashtableHasIndex()
     table[U32Max - 1] = &c;
 
 
-    _Assert(table.HasKey(0U) == true, "table.HasKey(0U)) == true");
-    _Assert(table.HasKey(234) == true, "table.HasKey(234)) == true");
-    _Assert(table.HasKey(U32Max - 1) == true, "table.HasKey(U32Max - 1)) == true");
+    _Assert(table.HasIndex(0) == true, "table.HasKey(0U)) == true");
+    _Assert(table.HasIndex(234) == true, "table.HasKey(234)) == true");
+    _Assert(table.HasIndex(U32Max - 1) == true, "table.HasKey(U32Max - 1)) == true");
 
     table.Free();
     return true;
