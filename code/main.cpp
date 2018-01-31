@@ -8,6 +8,7 @@
 #include "Common.h"
 #include "Memory.h"
 #include "Array.h"
+#include "FlatArray.h"
 #include "Hashtable.h"
 #include "Json\JsonParser.h"
 

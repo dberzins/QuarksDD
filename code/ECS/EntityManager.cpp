@@ -8,11 +8,20 @@
 
 namespace QuarksDD {
 
-internal bool32 MatchSystemType(uint32* type, System* sys)
+// internal bool32 MatchSystemType(uint32* type, System* sys)
+// {
+//     bool32 result = false;
+//     if (type && sys) {
+//         result = sys->type == *type;
+//     }
+//     return result;
+// }
+
+internal bool32 MatchIds(uint32* id1, uint32* id2)
 {
     bool32 result = false;
-    if (type && sys) {
-        result = sys->type == *type;
+    if (id1 && id2) {
+        result = *id1 == *id2;
     }
     return result;
 }
@@ -84,7 +93,7 @@ bool32 EntityManager::Init() {
         componentArena->Init((128 + sizeof(Component)) * EntityManager::maxEntities * EntityManager::maxComponents);
 
         ids = {};
-        ids.Init(systemArena, EntityManager::maxSystems);
+        ids.Init(systemArena, EntityManager::maxSystems, SizeOf(System, type), false);
 
         systems = {};
         systems.Init(systemArena, EntityManager::maxSystems);
@@ -124,7 +133,7 @@ bool32 EntityManager::Init(MemoryArena* systemArena, MemoryArena* entityArena, M
             this->entityArena = entityArena;
             this->componentArena = componentArena;
 
-            ids.Init(systemArena, EntityManager::maxSystems);
+            ids.Init(systemArena, EntityManager::maxSystems, SizeOf(System, type), false);
 
             systems = {};
             systems.Init(systemArena, EntityManager::maxSystems);
@@ -190,7 +199,7 @@ System* EntityManager::AddSystem(uint32 systemType, System* sys) {
             systems[sys->type] = sys;
             systemFlags |= 1UL << sys->type;
 
-            ids.AddCopy(systemType);
+            ids.Add(&systemType);
             result = sys;
         }
     }
@@ -208,7 +217,7 @@ System* EntityManager::AddSystem(System* sys) {
             systems[sys->type] = sys;
             systemFlags |= 1UL << sys->type;
 
-            ids.AddCopy(sys->type);
+            ids.Add(&sys->type);
             result = sys;
         }
     }
@@ -229,7 +238,7 @@ bool32 EntityManager::RemoveSystem(System* sys) {
                 systems.Remove(sys->type);
                 systemFlags &= ~(1UL << sys->type);
 
-                ids.Remove(&sys->type, (MatchFn)MatchSystemType);
+                ids.Remove(&sys->type, (MatchFn)MatchIds);
                 result = true;
             }
         }
@@ -242,7 +251,7 @@ bool32 EntityManager::Startup() {
     bool32 result = false;
 
     for (uint32 i = 0; i < ids.count; i++) {
-        uint32 type = *(uint32*)(ids.items + i)->data;
+        uint32 type = *(uint32*)ids.GetItem(i);
         HashItem* item = systems.GetItem(type);
         if (item && item->data) {
             System* s = (System*)item->data;
@@ -260,7 +269,7 @@ bool32 EntityManager::Run() {
     bool32 result = false;
 
     for (uint32 i = 0; i < ids.count; i++) {
-        uint32 type = *(uint32*)(ids.items + i)->data;
+        uint32 type = *(uint32*)ids.GetItem(i);
         HashItem* item = systems.GetItem(type);
         if (item && item->data) {
             System* s = (System*)item->data;
@@ -279,7 +288,7 @@ bool32 EntityManager::Run(uint32 systemFlags, void* context) {
     bool32 result = false;
 
     for (uint32 i = 0; i < ids.count; i++) {
-        uint32 type = *(uint32*)(ids.items + i)->data;
+        uint32 type = *(uint32*)ids.GetItem(i);
 
         if ((systemFlags & (1UL << type)) != 0) {
             HashItem* item = systems.GetItem(type);
@@ -304,7 +313,7 @@ void EntityManager::Cleanup()
     if (entities.initialized && entities.count) {
         //  Remove DEAD components from systems
         for (uint32 i = 0; i < ids.count; i++) {
-            uint32 type = *(uint32*)(ids.items + i)->data;
+            uint32 type = *(uint32*)ids.GetItem(i);
             HashItem* item = systems.GetItem(type);
             if (item && item->data) {
                 System* s = (System*)item->data;
@@ -323,7 +332,7 @@ bool32 EntityManager::Finish() {
     bool32 result = false;
 
     for (uint32 i = 0; i < ids.count; i++) {
-        uint32 type = *(uint32*)(ids.items + i)->data;
+        uint32 type = *(uint32*)ids.GetItem(i);
         HashItem* item = systems.GetItem(type);
         if (item && item->data) {
             System* s = (System*)item->data;
@@ -359,7 +368,7 @@ bool32 EntityManager::AddEntity(Entity* entity) {
 
         // Add entity components to systems
         for (uint32 i = 0; i < entity->ids.count; i++) {
-            uint32 type = *(uint32*)(entity->ids.items + i)->data;
+            uint32 type = *(uint32*)entity->ids.GetItem(i);
             HashItem* item = entity->components.GetItem(type);
             if (item && item->data) {
                 Component* component = (Component*)item->data;
@@ -385,7 +394,7 @@ bool32 EntityManager::RemoveEntity(Entity* entity) {
 
         // Remove entity components from systems
         for (uint32 i = 0; i < entity->ids.count; i++) {
-            uint32 type = *(uint32*)(entity->ids.items + i)->data;
+            uint32 type = *(uint32*)entity->ids.GetItem(i);
             HashItem* item = entity->components.GetItem(type);
             if (item && item->data) {
                 Component* component = (Component*)item->data;
@@ -410,7 +419,7 @@ bool32 EntityManager::AddComponent(Component* component) {
 
     // Add component to systems
     for (uint32 i = 0; i < ids.count; i++) {
-        uint32 type = *(uint32*)(ids.items + i)->data;
+        uint32 type = *(uint32*)ids.GetItem(i);
         HashItem* item = systems.GetItem(type);
         if (item && item->data) {
             System* s = (System*)item->data;
@@ -429,7 +438,7 @@ bool32 EntityManager::RemoveComponent(Component* component) {
 
     // Remove component from systems
     for (uint32 i = 0; i < ids.count; i++) {
-        uint32 type = *(uint32*)(ids.items + i)->data;
+        uint32 type = *(uint32*)ids.GetItem(i);
         HashItem* item = systems.GetItem(type);
         if (item && item->data) {
             System* s = (System*)item->data;

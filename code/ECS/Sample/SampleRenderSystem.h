@@ -42,25 +42,25 @@ struct SampleRenderSystem {
     }
 
     bool32 OnAction(RenderActionContext* context) {
-        printf("\nSampleRenderSystem OnAction \n");
+        // printf("\nSampleRenderSystem OnAction \n");
 
-        Array* components1 = system.GetComponents((u32)ComponentType::Component1);
-        for (u32 i = 0; components1 && i < components1->count; i++) {
-            Component* c = (Component*)components1->GetItem(i)->data;
-            printf("Name: \"%s\" EnityId: %llu : ComponentId: %llu  type: %d\n", c->entity->name, c->entity->id, c->id, c->type);
-        }
+        // Array* components1 = system.GetComponents((u32)ComponentType::Component1);
+        // for (u32 i = 0; components1 && i < components1->count; i++) {
+        //     Component* c = (Component*)components1->GetItem(i)->data;
+        //     printf("Name: \"%s\" EnityId: %llu : ComponentId: %llu  type: %d\n", c->entity->name, c->entity->id, c->id, c->type);
+        // }
 
-        Array* components2 = system.GetComponents((u32)ComponentType::Component2);
-        for (u32 i = 0; components2 && i < components2->count; i++) {
-            Component* c = (Component*)components2->GetItem(i)->data;
-            printf("Name: \"%s\" EnityId: %llu : ComponentId: %llu  type: %d\n",c->entity->name, c->entity->id, c->id, c->type);
-        }
+        // Array* components2 = system.GetComponents((u32)ComponentType::Component2);
+        // for (u32 i = 0; components2 && i < components2->count; i++) {
+        //     Component* c = (Component*)components2->GetItem(i)->data;
+        //     printf("Name: \"%s\" EnityId: %llu : ComponentId: %llu  type: %d\n",c->entity->name, c->entity->id, c->id, c->type);
+        // }
 
-        Array* components3 = system.GetComponents((u32)ComponentType::Component3);
-        for (u32 i = 0; components3 && i < components3->count; i++) {
-            Component* c = (Component*)components3->GetItem(i)->data;
-            printf("Name: \"%s\" EnityId: %llu : ComponentId: %llu  type: %d\n",c->entity->name, c->entity->id, c->id, c->type);
-        }
+        // Array* components3 = system.GetComponents((u32)ComponentType::Component3);
+        // for (u32 i = 0; components3 && i < components3->count; i++) {
+        //     Component* c = (Component*)components3->GetItem(i)->data;
+        //     printf("Name: \"%s\" EnityId: %llu : ComponentId: %llu  type: %d\n",c->entity->name, c->entity->id, c->id, c->type);
+        // }
 
         return false;
     }

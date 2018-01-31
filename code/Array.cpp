@@ -22,7 +22,7 @@ bool32  Array::Init(uint32 arraySize, bool32 sorted, CompareFn Compare, SortOrde
         size = arraySize + extend;
         
         // TODO(dainis): This is temporary fix for AddCopy data allocations!
-        // Should thin mor cleraly what to do here
+        // Should think more cleraly what to do here
         arena = (MemoryArena*)Allocate(sizeof(MemoryArena));
         *arena = {};
         arena->Init();
@@ -298,8 +298,8 @@ bool32 Array::Remove(uint32 index) {
 
 bool32 Array::Remove(void* matchData, MatchFn Match) {
     bool32 result = false;
-
-    if (matchData, Match) {
+    Assert(sorted == true);
+    if (sorted && matchData && Match) {
         uint32 match = 0;
 
         uint32 lo =0;
@@ -310,7 +310,7 @@ bool32 Array::Remove(void* matchData, MatchFn Match) {
             if (matchLo) {
                 ++match;
 
-            while (lo < hi) {
+                while (lo < hi) {
                     bool32 matchHi = Match(matchData, (items + hi)->data);
                     if (!matchHi) {
                         Swap(items + lo, items + hi);

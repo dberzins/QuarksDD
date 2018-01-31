@@ -9,6 +9,7 @@
 Simple educational library for data structures and data managment written in C and C++: 
 * [Memory managment](#memory-managment)
 * [Array](#array)
+* FlatArray
 * [List](#list)
 * [Stack](#stack)
 * [Hashtable](#hashtable)
@@ -18,7 +19,7 @@ Simple educational library for data structures and data managment written in C a
 
 ## Project goal
 
-Goal of the project is to have educational data structures data managment library with ability to have control over memory usage and managment.
+Goal of the project is to have educational data structures and data managment library with ability to have control over memory usage.
 Library is used as part for other side project (custom game engine) which will be main driver force for library evolution. 
 
 Library development tends to fallow [Handmade philosophy](https://handmade.network/manifesto).

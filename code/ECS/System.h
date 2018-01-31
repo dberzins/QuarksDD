@@ -6,6 +6,7 @@
 
 #include "../Common.h"
 #include "../Array.h"
+#include "../FlatArray.h"
 #include "../Hashtable.h"
 
 namespace QuarksDD {
@@ -33,7 +34,7 @@ struct System {
     FinishFn FinishCallback;
 
     struct {
-        Array ids;
+        FlatArray ids;
         Hashtable componentMap;
     };
 

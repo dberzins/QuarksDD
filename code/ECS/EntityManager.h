@@ -8,6 +8,7 @@
 #include "../Memory.h"
 #include "../Hashtable.h"
 #include "../Array.h"
+#include "../FlatArray.h"
 #include "Component.h"
 
 namespace QuarksDD {
@@ -56,7 +57,7 @@ struct EntityManager {
     MemoryArena* componentArena;
 
     struct {
-        Array ids;
+        FlatArray ids;
         Hashtable systems;
     };
     

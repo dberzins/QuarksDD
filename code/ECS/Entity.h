@@ -6,7 +6,7 @@
 
 #include "../Common.h"
 #include "../Hashtable.h"
-#include "../Array.h"
+#include "../FlatArray.h"
 
 #include "Component.h"
 
@@ -39,7 +39,7 @@ struct Entity {
     uint64 flags;
 
     struct {
-        Array ids;
+        FlatArray ids;
         Hashtable components;
     };
     

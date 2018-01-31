@@ -38,11 +38,20 @@ internal bool32 MatchComponentStatus(ComponentStatus* status, Component* compone
     return result;
 }
 
-internal bool32 MatchComponentType(uint32* type, Component* component)
+// internal bool32 MatchComponentType(uint32* type, Component* component)
+// {
+//     bool32 result = false;
+//     if (type && component) {
+//         result = component->type == *type;
+//     }
+//     return result;
+// }
+
+internal bool32 MatchIds(uint32* id1, uint32* id2)
 {
     bool32 result = false;
-    if (type && component) {
-        result = component->type == *type;
+    if (id1 && id2) {
+        result = *id1 == *id2;
     }
     return result;
 }
@@ -60,7 +69,7 @@ bool32 System::Init(MemoryArena* arena, uint32 systemId, uint32 systemType) {
         // MemorySize idsSize = sizeof(ArrayItem) * (EntityManager::maxComponents + 5) + sizeof(id)* EntityManager::maxComponents;
         // MemoryArena* idsArena = arena->CreateChildArena(idsSize);
         ids = {};
-        ids.Init(arena, EntityManager::maxComponents);
+        ids.Init(arena, EntityManager::maxComponents, SizeOf(Component, type), false);
 
         // Total component type map hastable size 
         // MemorySize mapSize = sizeof(HashItem) * 2 * EntityManager::maxComponents;
@@ -81,7 +90,7 @@ bool32 System::Init(MemoryArena* arena, uint32 systemId, uint32 systemType) {
                     components->Init(arena, EntityManager::maxEntities, true, (CompareFn)CompareComponentId, SortOrder::Asc);
                     componentMap[i] = components;
 
-                    ids.AddCopy(i);
+                    ids.Add(&i);
                 }
             }
         }
@@ -124,7 +133,7 @@ void System::AddComponentType(uint32 componentType) {
         components->Init(arena, EntityManager::maxEntities, true, (CompareFn)CompareComponentId, SortOrder::Asc);
         componentMap[componentType] = components;
         
-        ids.AddCopy(componentType);
+        ids.Add(&componentType);
     }
     componentFlags |= (1ULL << componentType);
 
@@ -144,7 +153,7 @@ void System::AddComponentTypes(uint64 flags) {
                 components->Init(arena, EntityManager::maxEntities, true, (CompareFn)CompareComponentId, SortOrder::Asc);
                 componentMap[i] = components;
 
-                ids.AddCopy(i);
+                ids.Add(&i);
             }
         }
     }
@@ -158,7 +167,7 @@ void System::RemoveComponentType(uint32 componentType) {
         Array* components = (Array*)componentMap.GetItem(componentType)->data;
         components->Clear();
 
-        ids.Remove(&componentType, (MatchFn)MatchComponentType);
+        ids.Remove(&componentType, (MatchFn)MatchIds);
     }
 }
 
@@ -218,7 +227,7 @@ bool32 System::RemoveComponents(ComponentStatus status) {
     bool32 result = false;
 
     for (uint32 i = 0; i < ids.count; i++) {
-        uint32 type = *(uint32*)(ids.items + i)->data;
+        uint32 type = *(uint32*)ids.GetItem(i);
         HashItem* item = componentMap.GetItem(type);
         if (item && item->data) {
             Array* components = GetComponents(i);

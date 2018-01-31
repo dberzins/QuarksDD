@@ -7,11 +7,20 @@
 
 namespace QuarksDD {
 
-internal bool32 MatchComponentType(uint32* type, Component* component)
+// internal bool32 MatchComponentType(uint32* type, Component* component)
+// {
+//     bool32 result = false;
+//     if (type && component) {
+//         result = component->type == *type;
+//     }
+//     return result;
+// }
+
+internal bool32 MatchIds(uint32* id1, uint32* id2)
 {
     bool32 result = false;
-    if (type && component) {
-        result = component->type == *type;
+    if (id1 && id2) {
+        result = *id1 == *id2;
     }
     return result;
 }
@@ -28,7 +37,7 @@ bool32 Entity::Init(MemoryArena* arena, EntityManager* entityManager, EntityId e
         // MemorySize idsSize = sizeof(ArrayItem) * (EntityManager::maxComponents + 5) + sizeof(id)* EntityManager::maxComponents;
         // MemoryArena* idsArena = arena->CreateChildArena(idsSize);
         ids = {};
-        ids.Init(arena, EntityManager::maxComponents);
+        ids.Init(arena, EntityManager::maxComponents, SizeOf(Component,type), false);
 
         // Total component type map hastable size 
         // MemorySize componentsSize = sizeof(HashItem) * 2 * EntityManager::maxComponents;
@@ -83,7 +92,7 @@ bool32 Entity::AddComponent(Entity* entity, uint32 componentType, Component* com
                 ecs->AddComponent(component);
             }
             
-            ids.AddCopy(componentType);
+            ids.Add(&componentType);
 
             result = true;
         }
@@ -105,7 +114,7 @@ bool32 Entity::AddComponent(Component* component) {
             ecs->AddComponent(component);
         }
 
-        ids.AddCopy(component->type);
+        ids.Add(&component->type);
 
         result = true;
     }
@@ -137,7 +146,9 @@ bool32 Entity::RemoveComponent(Component* component) {
                 components.Remove(component->type);
                 flags &= ~(1ULL << component->type);
 
-                ids.Remove(&component->type, (MatchFn)MatchComponentType);
+                ids.Remove(&component->type, (MatchFn)MatchIds);
+
+
                 result = true;
             }
         }
@@ -148,7 +159,7 @@ bool32 Entity::RemoveComponent(Component* component) {
 
 void Entity::SetComponentsStatus(ComponentStatus status) {
     for (uint32 i = 0; i < ids.count; i++) {
-        uint32 type = *(uint32*)(ids.items + i)->data;
+        uint32 type = *(uint32*)ids.GetItem(i);
         HashItem* item = components.GetItem(type);
         if (item && item->data) {
             Component* component = (Component*)item->data;
