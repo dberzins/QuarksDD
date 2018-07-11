@@ -3,7 +3,7 @@
 
 #if !defined(QMURMUR_H)
 
-#include "Common.h"
+#include "QuarksDD.h"
 
 namespace QuarksDD {
 

@@ -4,7 +4,7 @@
 
 #if !defined(QENTITY_H)
 
-#include "../Common.h"
+#include "../QuarksDD.h"
 #include "../Hashtable.h"
 #include "../FlatArray.h"
 
@@ -17,12 +17,19 @@ struct Entity;
 struct System;
 struct Component;
 
-#define CREATE_COMPONENT(entity, Type) \
-    (Type*) ArenaPushSize(((EntityManager*)(Entity*)entity->ecs)->componentArena, sizeof(Type)) \
 
-#define ADD_COMPONENT(entity, componentType, c) \
-    (bool32) entity->AddComponent(entity, (uint32)componentType, &c->component)
 
+
+// #define CREATE_COMPONENT(entity, Type) \
+//     (Type*) ArenaPushSize(((EntityManager*)(Entity*)entity->ecs)->componentArena, sizeof(Type)) \
+
+// #define CREATE_COMPONENT(arena, Type) \
+//     (Type*) ArenaPushSize(((MemoryArena*)(arena), sizeof(Type)) \
+
+// #define ADD_COMPONENT(entity, componentType, c) \
+//     (bool32) entity->AddComponent(entity, (uint32)componentType, &c->component)
+
+#define MAX_ENTITY_NAME 30
 typedef uint64 EntityId;
 
 enum class EntityStatus {
@@ -34,7 +41,7 @@ enum class EntityStatus {
 struct Entity {
     // Data 
     EntityId id;
-    const char* name;
+    char name[MAX_ENTITY_NAME];
     EntityStatus status;
     uint64 flags;
 
@@ -48,12 +55,14 @@ struct Entity {
     bool32 initialized;
 
     // Operations
+    bool32 Init(MemoryArena* arena, EntityManager* entityManager, EntityId entityId, const char* name, uint32 nameLen);
     bool32 Init(MemoryArena* arena, EntityManager* entityManager, EntityId entityId, const char* name);
     void Free();
 
     bool32 HasComponent(uint32 type);
     Component* GetComponent(uint32 type);
-    bool32 AddComponent(Entity* entity, uint32 componentType, Component* component);
+    // bool32 AddComponent(Entity* entity, uint32 componentType, Component* component);
+    bool32 AddComponent(uint32 componentType, Component* component);
     bool32 AddComponent(Component* component);
     bool32 RemoveComponent(Component* component);
     bool32 RemoveComponent(uint32 type);

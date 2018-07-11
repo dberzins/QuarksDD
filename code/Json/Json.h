@@ -49,7 +49,6 @@ namespace QuarksDD {
     struct JValue 
     {
         // Data 
-        bool32 initialized;
         JValueType type;
         union {
             int32 iValue;
@@ -60,8 +59,6 @@ namespace QuarksDD {
         };
 
         // Operations
-        bool32 Init();
-
         void* GetValue();
         bool32 GetValue(int32** value);
         bool32 GetValue(int32& value);

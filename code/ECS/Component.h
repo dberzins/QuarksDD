@@ -4,13 +4,18 @@
 
 #if !defined(QCOMPONENT_H)
 
-#include "../Common.h"
+#include "../QuarksDD.h"
 
 namespace QuarksDD {
 
 struct Entity;
 
 #define GET_COMPONENT(c, Type) (Type*) ContainerOf(c, Type, component)
+#define GET_SCOMPONENT(c, Type) (Type*) GET_COMPONENT(&c->component, Type)
+#define GET_ENTITY_COMPONENT(e, Type, CType) GET_COMPONENT(((Entity*)e)->GetComponent((u32)CType), Type)
+#define GET_REL_COMPONENT(c, Type, CType) (Type*) GET_ENTITY_COMPONENT(((Component*)c)->entity, Type, CType)
+#define GET_REL_SCOMPONENT(c, Type, CType) (Type*) GET_ENTITY_COMPONENT(c->component.entity, Type, CType)
+
 typedef uint64 ComponentId;
 
 enum class ComponentStatus {

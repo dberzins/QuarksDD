@@ -4,7 +4,7 @@
 
 #if !defined(QJSONPARSER_H)
 
-#include "../Common.h"
+#include "../QuarksDD.h"
 #include "../Memory.h"
 
 #include "AstNode.h"

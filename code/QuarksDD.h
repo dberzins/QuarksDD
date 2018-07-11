@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT-style license that can be
 // found in the LICENSE file.
 
-#if !defined(QCOMMON_H)
+#if !defined(QQUARKSDD_H)
 
 #include <stdint.h>
 #include <float.h>
@@ -48,6 +48,7 @@ namespace QuarksDD {
     typedef real64 f64;
 
     typedef size_t SizeType;
+    typedef uintptr_t uintptr;
 
     // Code from: stdint.h
     #define I8Min   (-127i8 - 1)
@@ -77,6 +78,14 @@ namespace QuarksDD {
 
     #define Minimum(a, b) ((a < b) ? (a) : (b))
     #define Maximum(a, b) ((a > b) ? (a) : (b))
+
+    #define ClampMax(a, max) Minimum(a, max)
+    #define ClampMin(a, min) Maximum(a, min)
+
+    // #define AlingnDown(n, a) ((n) & ~((a) - 1))
+    // #define AlignUp(n, a) AlignDown((n) + (a) - 1, (a))
+    // #define AlignDownPtr(p, a) ((void*)AlignDown((uintptr)(p), (a)))
+    // #define AlignUpPtr(p, a) ((void*)AlignUp((uintptr)(p), (a)))
 
     #define Flag32(value) (u32) 1UL << (u32)value
     #define Flag64(value) (u64) 1ULL << (u32)value
@@ -114,6 +123,7 @@ namespace QuarksDD {
     };
     
 
+    #define IsPowOf2(x) (((x) != 0) && ((x) & ((x)-1)) == 0)
     // NOTE: Rounding functions
     // Code from: https://stackoverflow.com/questions/466204/rounding-up-to-next-power-of-2
     inline uint32 RoundUpToPowerOf2(uint32 v) {
@@ -125,5 +135,5 @@ namespace QuarksDD {
     }
 
 } // namespace
-#define QCOMMON_H
+#define QQUARKSDD_H
 #endif

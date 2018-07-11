@@ -26,10 +26,18 @@ internal bool32 MatchIds(uint32* id1, uint32* id2)
 }
 
 bool32 Entity::Init(MemoryArena* arena, EntityManager* entityManager, EntityId entityId, const char* name) {
+    return this->Init(arena, entityManager, entityId, name, strlen(name));
+}
+
+bool32 Entity::Init(MemoryArena* arena, EntityManager* entityManager, EntityId entityId, const char* name, uint32 nameLen) {
     bool32 result = false;
     if (!initialized && arena) {
         id = entityId;
-        this->name = name;
+
+        uint32 nameLength = nameLen % (MAX_ENTITY_NAME-1);
+        memcpy(this->name, name, nameLength);
+        this->name[nameLength] = 0;
+
         ecs = entityManager;
         this->arena = arena;
 
@@ -76,15 +84,40 @@ Component* Entity::GetComponent(uint32 type) {
     return result;
 }
 
-bool32 Entity::AddComponent(Entity* entity, uint32 componentType, Component* component) {
+// bool32 Entity::AddComponent(Entity* entity, uint32 componentType, Component* component) {
+//     bool32 result = false;
+//     Assert(componentType < EntityManager::maxComponents);
+
+//     if (!HasComponent(componentType)) {
+//         if (component) {
+//             component->Init(entity, ++ecs->maxComponentId, componentType);
+
+//             components.Add(componentType, component);
+//             flags |= 1ULL << componentType;
+            
+
+//             if (component->status == ComponentStatus::Alive) {
+//                 ecs->AddComponent(component);
+//             }
+            
+//             ids.Add(&componentType);
+
+//             result = true;
+//         }
+//     }
+
+//     return result;
+// }
+
+bool32 Entity::AddComponent(uint32 componentType, Component* component) {
     bool32 result = false;
     Assert(componentType < EntityManager::maxComponents);
 
     if (!HasComponent(componentType)) {
         if (component) {
-            component->Init(entity, ++ecs->maxComponentId, componentType);
+            component->Init(this, ++ecs->maxComponentId, componentType);
 
-            components[componentType] = component;
+            components.Add(componentType, component);
             flags |= 1ULL << componentType;
             
 
@@ -107,7 +140,7 @@ bool32 Entity::AddComponent(Component* component) {
     Assert(component->type < EntityManager::maxComponents);
 
     if (!HasComponent(component->type)) {
-        components[component->type] = component;
+        components.Add(component->type, component);
         flags |= 1ULL << component->type;
 
         if (component->status == ComponentStatus::Alive) {

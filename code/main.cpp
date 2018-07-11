@@ -5,8 +5,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "Common.h"
+#include "QuarksDD.h"
 #include "Memory.h"
+#include "Buffer.h"
 #include "Array.h"
 #include "FlatArray.h"
 #include "Hashtable.h"
@@ -20,7 +21,7 @@
 #include "ECS\Sample\SampleSystem.h"
 #include "ECS\Sample\SampleRenderSystem.h"
 
-// #include <windows.h>
+#include <windows.h>
 using namespace QuarksDD;
 
 namespace QuarksDD {
@@ -29,12 +30,12 @@ namespace QuarksDD {
 int32 main(int32 argc, char **argv)
 {
     printf("Current dir: %s\n", argv[0]);
-
     // LARGE_INTEGER StartingTime, InitTime, ExecTime, ElapsedMicroseconds;
     // LARGE_INTEGER Frequency;
 
     // QueryPerformanceFrequency(&Frequency); 
     // QueryPerformanceCounter(&StartingTime);
+
 
 
     EntityManager ecs = {};
@@ -67,45 +68,57 @@ int32 main(int32 argc, char **argv)
     for (uint32 i = 0; i < EntityManager::maxEntities; i++) {
         Entity* e = ecs.CreateEntity("Entity");
         {
-            SampleComponent1* c = CREATE_COMPONENT(e, SampleComponent1);
+            // SampleComponent1* c = CREATE_COMPONENT(e, SampleComponent1);
+            SampleComponent1* c = ArenaPushStruct(&ecs.componentArena, SampleComponent1);
             if (c) {
                 *c = {};
-                ADD_COMPONENT(e, ComponentType::Component1, c);
+                e->AddComponent((uint32)ComponentType::Component1, &c->component);
+                // ADD_COMPONENT(e, ComponentType::Component1, c);
             }
         }        
         {
-            SampleComponent2* c = CREATE_COMPONENT(e, SampleComponent2);
+            SampleComponent2* c = ArenaPushStruct(&ecs.componentArena, SampleComponent2);
+            // SampleComponent2* c = CREATE_COMPONENT(e, SampleComponent2);
             if (c) {
                 *c = {};
-                ADD_COMPONENT(e, ComponentType::Component2, c);
+                e->AddComponent((u32)ComponentType::Component2, &c->component);
+                // ADD_COMPONENT(e, ComponentType::Component2, c);
             }
         }        
         {
-            SampleComponent3* c = CREATE_COMPONENT(e, SampleComponent3);
+            SampleComponent3* c = ArenaPushStruct(&ecs.componentArena, SampleComponent3);
+            // SampleComponent3* c = CREATE_COMPONENT(e, SampleComponent3);
             if (c) {
                 *c = {};
-                ADD_COMPONENT(e, ComponentType::Component3, c);
+                e->AddComponent((u32)ComponentType::Component3, &c->component);
+                // ADD_COMPONENT(e, ComponentType::Component3, c);
             }
         }        
         {
-            SampleComponent4* c = CREATE_COMPONENT(e, SampleComponent4);
+            SampleComponent4* c = ArenaPushStruct(&ecs.componentArena, SampleComponent4);
+            // SampleComponent4* c = CREATE_COMPONENT(e, SampleComponent4);
             if (c) {
                 *c = {};
-                ADD_COMPONENT(e, ComponentType::Component4, c);
+                e->AddComponent((u32)ComponentType::Component4, &c->component);
+                // ADD_COMPONENT(e, ComponentType::Component4, c);
             }
         }        
         {
-            SampleComponent5* c = CREATE_COMPONENT(e, SampleComponent5);
+            SampleComponent5* c = ArenaPushStruct(&ecs.componentArena, SampleComponent5);
+            // SampleComponent5* c = CREATE_COMPONENT(e, SampleComponent5);
             if (c) {
                 *c = {};
-                ADD_COMPONENT(e, ComponentType::Component5, c);
+                e->AddComponent((u32)ComponentType::Component5, &c->component);
+                // ADD_COMPONENT(e, ComponentType::Component5, c);
             }
         }        
         {
-            SampleComponent6* c = CREATE_COMPONENT(e, SampleComponent6);
+            SampleComponent6* c = ArenaPushStruct(&ecs.componentArena, SampleComponent6);
+            // SampleComponent6* c = CREATE_COMPONENT(e, SampleComponent6);
             if (c) {
                 *c = {};
-                ADD_COMPONENT(e, ComponentType::Component6, c);
+                e->AddComponent((u32)ComponentType::Component6, &c->component);
+                // ADD_COMPONENT(e, ComponentType::Component6, c);
             }
         }        
 

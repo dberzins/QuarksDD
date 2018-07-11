@@ -3,6 +3,8 @@
 
 #include "Tests.h"
 #include "TestStack.cpp"
+#include "TestBuffer.cpp"
+#include "TestIntern.cpp"
 #include "TestArray.cpp"
 #include "TestList.cpp"
 #include "TestHashtable.cpp"
@@ -19,12 +21,14 @@ namespace QuarksDD {
 
 int32 main(int32 argc, char **argv)
 {
-    TestMemory::Run();
-    TestStack::Run();
-    TestArray::Run();
-    TestList::Run();
-    TestHashtable::Run();
-    TestJson::Run();
+    // TestMemory::Run();
+    // TestStack::Run();
+    // TestBuffer::Run();
+    TestIntern::Run();
+    // TestArray::Run();
+    // TestList::Run();
+    // TestHashtable::Run();
+    // TestJson::Run();
     
     // bool32 result = stats.failed == 0;
     // if ( result) {

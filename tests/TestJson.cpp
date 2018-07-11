@@ -1,6 +1,6 @@
 #if !defined(QTESTJSON_CPP)
 
-#include <Common.h>
+#include <QuarksDD.h>
 #include <Memory.h>
 #include <Json\JsonParser.h>
 #include <stdio.h>

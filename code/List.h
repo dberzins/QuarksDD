@@ -4,7 +4,7 @@
 
 #if !defined(QLIST_H)
 
-#include "Common.h"
+#include "QuarksDD.h"
 #include "Memory.h"
 
 #include <stdlib.h>
@@ -60,6 +60,17 @@ struct List
         ListItem* result = NULL;
         if (iter) {
             result = ContainerOf(iter, ListItem, iterator);
+        }
+        return result;
+    }
+
+    static void* GetValue(ListIterator* iter) {
+        void* result = NULL;
+        if (iter) {
+            ListItem* item = ContainerOf(iter, ListItem, iterator);
+            if (item) {
+                result = item->data;
+            }
         }
         return result;
     }

@@ -2,19 +2,10 @@
 // Use of this source code is governed by a MIT-style license that can be
 // found in the LICENSE file.
 
-#include "../Common.h"
+#include "../QuarksDD.h"
 #include "Json.h"
 
 namespace QuarksDD {
-
-bool32 JValue::Init() {
-    bool32 result = false;
-    if (!initialized) {
-        initialized = true;
-        result = true;
-    }
-    return result;
-}
 
 void* JValue::GetValue()
 {

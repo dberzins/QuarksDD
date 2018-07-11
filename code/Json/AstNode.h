@@ -4,7 +4,7 @@
 
 #if !defined(QASTNODE_H)
 
-#include "../Common.h"
+#include "../QuarksDD.h"
 #include "../Memory.h"
 #include "JsonToken.h"
 #include "Json.h"
@@ -25,7 +25,6 @@ namespace QuarksDD {
     struct AstNode
     {
         // Data      
-        bool32 initialized;  
         AstType type;
         AstNode* left;
         AstNode* right;

@@ -6,6 +6,7 @@
 
 #include "ECS.h"
 #include "../System.h"
+#include "../EntityManager.h"
 
 namespace QuarksDD {
 

@@ -4,8 +4,11 @@
 
 #if !defined(QFLATARRAY_H)
 
-#include "Common.h"
+#include "QuarksDD.h"
 #include "Memory.h"
+#include <stdlib.h>
+#include <string.h>
+
 namespace QuarksDD {
 
 #define FLAT_ARRAY_POS_UNINITIALIZED U32Max
@@ -153,11 +156,16 @@ struct FlatArray
         return result;
     }
 
-    bool32 Set(uint32 index, void* data) {
+    bool32 Set(uint32 index, void* data, bool32 fillCheck = true) {
         bool32 result = false;
 
-        if (index < count)  {
+        if (index < count && fillCheck)  {
             memcpy(((uint8*)items + (count * itemSize)), (uint8*)data, itemSize);
+            result = true;
+        }
+        else if (index < size) {
+            memcpy(((uint8*)items + (count * itemSize)), (uint8*)data, itemSize);
+            count = index + 1;
             result = true;
         }
         return result;
@@ -179,6 +187,7 @@ struct FlatArray
         for (uint32 i = 0; i < count; i++) {
             bool32 match = Match(matchData, ((uint8*)items + (i * itemSize)));
             if (match) {
+                Remove(i);
                 result = true;
                 break;
             }

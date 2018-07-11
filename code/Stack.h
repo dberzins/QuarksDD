@@ -4,7 +4,7 @@
 
 #if !defined(QSTACK_H)
 
-#include "Common.h"
+#include "QuarksDD.h"
 #include "Memory.h"
 
 #include <stdlib.h>

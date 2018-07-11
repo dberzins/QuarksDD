@@ -8,26 +8,48 @@
 
 namespace QuarksDD {
 
-bool32  Hashtable::Init(uint32 tableSize)
+bool32  Hashtable::Init(uint32 tableSize, MemorySize dataSize, MemorySize keySize)
 {
     bool32 result = false;
 
     if (!initialized) {
         // Enforce power of 2 size for table
         size = RoundUpToPowerOf2(tableSize);
+
+        Assert(keySize == 0 || ( keySize > 1));
+        this->keySize = keySize;
+        this->dataSize = dataSize;
         
         // Allocate hashtable bolcks memory (1 primmary slot + 1 colision slot = 2)
-        MemorySize memSize = size * 2 * sizeof(HashItem);
-        
-        arena = (MemoryArena*)Allocate(sizeof(MemoryArena));
-        *arena = {};
-        arena->Init(memSize, true);
+        itemArena = (MemoryArena*)Allocate(sizeof(MemoryArena));
+        *itemArena = {};
+        itemArena->Init(size * 2 * sizeof(HashItem), true);
+        table = ArenaPushArray(itemArena, size, HashItem);
 
-        table = ArenaPushArray(arena, size, HashItem);
+        if (keySize) {
+            keyArena = (MemoryArena*)Allocate(sizeof(MemoryArena));
+            *keyArena = {};
+            keyArena->Init(size * 2 * keySize, true);
+        }
+
+        if (dataSize > 0) {
+            dataArena = (MemoryArena*)Allocate(sizeof(MemoryArena));
+            *dataArena = {};
+            dataArena->Init(size * 2 * dataSize, true);
+        }
+
         if (table) {
             for (uint32 i = 0; i < size; ++i) {
                 *(table + i) = {};
                 (table + i)->index = HASH_ITEM_UNINITIALIZED;
+
+                if (keySize > 0 && keyArena) {
+                    (table + i)->key = (char*)ArenaPushSize(keyArena, keySize);
+                }
+
+                if (dataSize > 0 && dataArena) {
+                    (table + i)->data = (void*)ArenaPushSize(dataArena, dataSize);
+                }
             }
 
             useLocalArena = true;
@@ -38,33 +60,55 @@ bool32  Hashtable::Init(uint32 tableSize)
     return result;
 }
 
-bool32  Hashtable::Init(MemoryArena *arena, uint32 tableSize)
+bool32  Hashtable::Init(MemoryArena *arena, uint32 tableSize, MemorySize dataSize, MemorySize keySize)
 {
     bool32 result = false;
 
     if (!initialized) {
         useLocalArena = false;
         this->arena = arena;
-        
+
+        Assert(arena);
+        Assert(keySize == 0 || ( keySize > 1));
+        this->keySize = keySize;
+        this->dataSize = dataSize;
+
         // Enforce power of 2 size for table
         count = 0;            
         size = RoundUpToPowerOf2(tableSize);
-
-        // NOTE(dainis): We are not reserving additional space for collisions, 
-        // as we dont know how arena will be used by other code paths
-        // MemorySize memSize = size * 2 * sizeof(HashItem);
         
-        table = ArenaPushArray(arena, size, HashItem);
+        // Allocate hashtable bolcks memory (1 primmary slot + 1 colision slot = 2)
+        itemArena = arena->CreateChildArena(size * 2 * sizeof(HashItem));
+        table = (HashItem*)ArenaPushArray(itemArena, size, HashItem);
+        
+        if (keySize > 0) {
+            keyArena = arena->CreateChildArena(size * 2 * keySize);
+        }
+
+        if (dataSize > 0) {
+            dataArena = arena->CreateChildArena(size * 2 * dataSize);
+        }
+        
         if (table) {
             for (uint32 i = 0; i < size; ++i) {
                 *(table + i) = {};
                 (table + i)->index = HASH_ITEM_UNINITIALIZED;
+
+                if (keySize > 0 && keyArena) {
+                    (table + i)->key = (char*)ArenaPushSize(keyArena, keySize);
+                }
+
+                if (dataSize > 0 && dataArena) {
+                    (table + i)->data = (void*)ArenaPushSize(dataArena, dataSize);
+                }
             }
             
             initialized = true;
 
             result = true;
         }
+
+
     }
     return result;
 }
@@ -72,17 +116,44 @@ bool32  Hashtable::Init(MemoryArena *arena, uint32 tableSize)
 void Hashtable::Free() {
     if (initialized) {
         if (useLocalArena) {
-            if (arena) {
-                arena->Free();
-                Deallocate(arena);
-                arena = NULL;
+            if (itemArena) {
+                itemArena->Free();
+                Deallocate(itemArena);
+                itemArena = NULL;
+            }
+            
+            if (keyArena) {
+                keyArena->Free();
+                Deallocate(keyArena);
+                keyArena = NULL;
             }
 
-            table = NULL;
-            firstFree = NULL;
+            if (dataArena) {
+                dataArena->Free();
+                Deallocate(dataArena);
+                dataArena = NULL;
+            }
+        }
+        else {
+            if (arena) {
+                if (itemArena) {
+                    arena->FreeChildArena(itemArena);
+                    itemArena = NULL;
+                }
+                if (keyArena) {
+                    arena->FreeChildArena(keyArena);
+                    keyArena = NULL;
+                }
+                if (dataArena) {
+                    arena->FreeChildArena(dataArena);
+                    dataArena = NULL;
+                }
+            }
         }
     }
 
+    table = NULL;
+    firstFree = NULL;
     *this = {};
 }
 
@@ -95,8 +166,7 @@ void Hashtable::Clear() {
                 bool32  isFirstItem = item->prev == NULL;
 
                 // Reset block
-                *item = {};
-                item->index = HASH_ITEM_UNINITIALIZED;
+                item->Reset(dataSize, keySize);
 
                 // Add item to free list for memory reuse if ts not first item in table
                 if (!isFirstItem) {
@@ -117,7 +187,7 @@ void Hashtable::Clear() {
 }
 
 void Hashtable::Remove(char* key) {
-    uint32 index = Murmur3x32(key, (size_t)strlen(key), 0);
+    uint32 index = ToIndex(key);
     HashItem* result = GetHashItem(index);
     if (result) {
         RemoveHashItem(result);
@@ -135,25 +205,62 @@ void Hashtable::Remove(uint32 index) {
 // http://burtleburtle.net/bob/hash/doobs.html
 // https://stackoverflow.com/questions/7666509/hash-function-for-string
 HashItem* Hashtable::Add(char* key, void* data = NULL) {
-    uint32 index = Murmur3x32(key, (size_t)strlen(key), 0);
+    uint32 index = ToIndex(key);
     HashItem* result = GetHashItem(index, HashAccess::ReadWrite);
-    result->key = key;
-    result->data = data;
+    if (result) {
+        if (keySize > 0) {
+            if (key) {
+                memcpy(result->key, key, keySize -1);
+                result->key[keySize - 1] = 0;
+            }
+        }
+        else {
+            result->key = key;
+        }
 
+        if (dataSize > 0) {
+            if (data) {
+                memcpy(result->data, data, dataSize);
+            }
+        }
+        else {
+            result->data = data;
+        }
+    }
     return result;
 }
 
 HashItem* Hashtable::Add(uint32 index, void* data = NULL) {
     HashItem* result = GetHashItem(index, HashAccess::ReadWrite);
-    result->data = data;
+   
+    if (result) {
+        if (dataSize > 0) {
+            if (data) {
+                memcpy(result->data, data, dataSize);
+            }
+        }
+        else {
+            result->data = data;
+        }
+    }
     return result;
 }
 
 HashItem& Hashtable::operator[](char* key)
 {
-    uint32 index = Murmur3x32(key, (size_t)strlen(key), 0);
+    uint32 index = ToIndex(key);
     HashItem* result = GetHashItem(index, HashAccess::ReadWrite);
-    result->key = key;
+    if (result) {
+        if (keySize > 0) {
+            if (key) {
+                memcpy(result->key, key, keySize - 1);
+                result->key[keySize - 1] = 0;
+            }
+        }
+        else {
+            result->key = key;
+        }
+    }
     return *result;
 };
 
@@ -164,7 +271,7 @@ HashItem& Hashtable::operator[](uint32 index)
 };
 
 HashItem* Hashtable::GetItem(char* key) {
-    uint32 index = Murmur3x32(key, (size_t)strlen(key), 0);
+    uint32 index = ToIndex(key);
     HashItem* result = GetHashItem(index, HashAccess::ReadOnly);
     return result;
 }
@@ -228,19 +335,19 @@ HashItem* Hashtable::GetNextItem(HashItem* item) {
             HashItem* testItem = table + slot;
             
             if (item == testItem) {
+                testItem = item->next;
                 found = true;
             }
-            else if (found && testItem->index != HASH_ITEM_UNINITIALIZED) {
+            else if (found && testItem && testItem->index != HASH_ITEM_UNINITIALIZED) {
                 result = testItem;
                 return result;
             }
 
-            while (testItem && testItem->index != HASH_ITEM_UNINITIALIZED) {
-                testItem = item->next;
+            while (testItem) {
                 if (item == testItem) {
                     found = true;
                 }
-                else if (found) {
+                else if (found && testItem->index != HASH_ITEM_UNINITIALIZED) {
                     result = testItem;
                     return result;
                 }
@@ -311,7 +418,7 @@ HashtableIterator* Hashtable::GetIteratorSorted(SortOrder order)
    HashtableIterator* last = NULL;
    
    Array items = {};
-   items.Init(count, true, CompareHashItemsPos, SortOrder::Asc);
+   items.Init(count, 0, true, CompareHashItemsPos, SortOrder::Asc);
 
    for (uint32 slot = 0; slot < size; slot++) {
        item = table + slot;
@@ -352,11 +459,19 @@ HashItem* Hashtable::AllocateHashItem()
         firstFree = firstFree->next;
     }
     else {
-        result = ArenaPushStruct(arena, HashItem);
+        result = ArenaPushStruct(itemArena, HashItem);
+        if (keySize > 0) {
+            result->key = (char*)ArenaPushSize(keyArena, keySize);
+        }
+
+        if (dataSize > 0) {
+            result->data = ArenaPushSize(dataArena, dataSize);
+        }
     }
 
     if (result) {
-        *result = {};
+        result->Init();
+        // result->Reset(dataSize, keySize);
     }
 
     return result;
@@ -397,7 +512,7 @@ HashItem *Hashtable::GetHashItem(uint32 index, HashAccess access)
         if (access == HashAccess::ReadWrite && item->index == HASH_ITEM_UNINITIALIZED)
         {
             item->index = index;
-            item->next = NULL;
+            // item->next = NULL; // IMPORTANT: this will brake bucket chain if first bucket was removed!!!
             item->pos = maxPos;
             item->slot = slot;
            
@@ -431,9 +546,8 @@ void Hashtable::RemoveHashItem(HashItem* item)
         }
     }
 
-    // Reset block
-    *item = {};
-    item->index = HASH_ITEM_UNINITIALIZED;
+    // Reset item
+    item->Reset(dataSize, keySize);
     count--;
 
     // Add item to free list for memory reuse if ts not first item in table
@@ -446,6 +560,11 @@ void Hashtable::RemoveHashItem(HashItem* item)
             firstFree = item;
         }
     }
+}
+
+uint32 Hashtable::ToIndex(char* key) {
+    uint32 result =  Murmur3x32(key, (SizeType)strlen(key), 0);
+    return result;
 }
 
 } // namespace

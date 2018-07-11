@@ -1,6 +1,6 @@
 #if !defined(QTESTARRAY_CPP)
 
-#include <Common.h>
+#include <QuarksDD.h>
 #include <Memory.h>
 #include <Array.h>
 #include <stdio.h>
@@ -38,8 +38,8 @@ internal uint32 ArrayInitArena()
     _Assert(a.items != NULL, "a.items != NULL");
     _Assert(a.extend == 5.0f, "a.extend == 5.0f");
     _Assert(a.count == 0, "a.count == 0");
-    _Assert(arena.block != 0, "arena.block != 0");
-    _Assert(arena.block->size == (a.size * sizeof(ArrayItem)), "arena.block->size == (a.size * sizeof(ArrayItem)");
+    _Assert(a.itemArena->block != 0, "a.itemArena->block != 0");
+    _Assert(a.itemArena->block->size == (a.size * sizeof(ArrayItem)), "a.itemArena->block->size == (a.size * sizeof(ArrayItem)");
 
     a.Free();
     arena.Free();
@@ -466,7 +466,7 @@ internal uint32 ArrayItemValueAssigne()
         a.Add(&values1[i]);
     }
     for (uint32 i = 0; i < ArrayCount(values2); i++) {
-        a[i] = &values2[i];
+        a.Set(i, &values2[i]);
     }
 
 
@@ -507,7 +507,7 @@ internal uint32 ArrayItemValueAssigneArena()
         a.Add(&values1[i]);
     }
     for (uint32 i = 0; i < ArrayCount(values2); i++) {
-        a[i] = &values2[i];
+        a.Set(i, &values2[i]);
     }
 
 
@@ -536,7 +536,7 @@ internal uint32 ArrayItemValueAssigneArena()
     return true;
 }
 
-
+// TODO(dainis): Do array resize stress test!!!
 
 internal void Run()
 {

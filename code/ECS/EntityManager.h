@@ -4,15 +4,15 @@
 
 #if !defined(QENTITYMANAGER_H)
 
-#include "../Common.h"
+#include "../QuarksDD.h"
 #include "../Memory.h"
 #include "../Hashtable.h"
 #include "../Array.h"
 #include "../FlatArray.h"
 #include "Component.h"
+#include "Entity.h"
 
 namespace QuarksDD {
-struct Entity;
 struct System;
 
 #define MAX_SYSTEMS 32
@@ -77,6 +77,7 @@ struct EntityManager {
 
     // System Actions
     bool32 Startup();
+    bool32 Startup(uint32 systemFlags, void* context);
     bool32 Run();
     bool32 Run(uint32 systemFlags, void* context);
     void Cleanup();
@@ -84,6 +85,7 @@ struct EntityManager {
 
     // Entities
     Entity* CreateEntity(const char* name);
+    Entity* CreateEntity(const char* name, uint32 nameLen);
     bool32 AddEntity(Entity* entity);
     bool32 RemoveEntity(Entity* entity);
     // Component

@@ -87,8 +87,8 @@ bool32 System::Init(MemoryArena* arena, uint32 systemId, uint32 systemType) {
                     // MemoryArena* componentsArena = arena->CreateChildArena(componentsSize);
 
                     *components = {};
-                    components->Init(arena, EntityManager::maxEntities, true, (CompareFn)CompareComponentId, SortOrder::Asc);
-                    componentMap[i] = components;
+                    components->Init(arena, EntityManager::maxEntities, 0, true, (CompareFn)CompareComponentId, SortOrder::Asc);
+                    componentMap.Add(i, components);
 
                     ids.Add(&i);
                 }
@@ -130,8 +130,8 @@ void System::AddComponentType(uint32 componentType) {
         // MemoryArena* componentsArena = arena->CreateChildArena(componentsSize);
 
         *components = {};
-        components->Init(arena, EntityManager::maxEntities, true, (CompareFn)CompareComponentId, SortOrder::Asc);
-        componentMap[componentType] = components;
+        components->Init(arena, EntityManager::maxEntities, 0, true, (CompareFn)CompareComponentId, SortOrder::Asc);
+        componentMap.Add(componentType, components);
         
         ids.Add(&componentType);
     }
@@ -150,8 +150,8 @@ void System::AddComponentTypes(uint64 flags) {
                 // MemoryArena* componentsArena = arena->CreateChildArena(componentsSize);
 
                 *components = {};
-                components->Init(arena, EntityManager::maxEntities, true, (CompareFn)CompareComponentId, SortOrder::Asc);
-                componentMap[i] = components;
+                components->Init(arena, EntityManager::maxEntities, 0, true, (CompareFn)CompareComponentId, SortOrder::Asc);
+                componentMap.Add(i, components);
 
                 ids.Add(&i);
             }
@@ -183,18 +183,7 @@ bool32 System::AddComponent(Component* component) {
     if (arena && component && HasComponent(component->type)) {
         Array* components = GetComponents(component->type);
         if (components) {
-            if (!components->items->data) {
-                u32 bbb =3234;
-            }
-            if (component->id == 5467) {
-            // if (component->id == 28994) {
-                u32 prenull =1;
-            }
-            if (component->id == 5468) {
-            // if (component->id == 28994) {
-                u32 bbreak =1;
-            }
-            result = components->AddSorted(component);
+            result = components->AddSorted(component) != NULL;
         }
     }
     return result;

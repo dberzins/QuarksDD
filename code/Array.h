@@ -4,7 +4,7 @@
 
 #if !defined(QARRAY_H)
 
-#include "Common.h"
+#include "QuarksDD.h"
 #include "Memory.h"
 #include <stdlib.h>
 #include <string.h>
@@ -15,13 +15,18 @@ struct ArrayItem
 {
     // Data 
     void* data;
-    bool32 empty;
+    // bool32 empty;
 
     // Operations
-    ArrayItem& operator=(void* data) {
-        this->data = data;
-        
-        return *this;
+    void Reset(MemorySize dataSize) {
+
+        if (dataSize > 0 && data) {
+            ZeroSize(dataSize, data);
+        }
+        else {
+            data = NULL;
+        }
+
     }
 };
 
@@ -34,25 +39,27 @@ struct Array
     bool32 useHeapAlloc;
     uint32 count;
     uint32 size;
+    MemorySize dataSize;
     uint32 extend;
     MemoryArena *arena;
+    MemoryArena *itemArena;
+    MemoryArena *dataArena;
     ArrayItem* items;
     
     // Operations
     CompareFn Compare;
-    bool32  Init(uint32 arraySize = 5, bool32 sorted = false, CompareFn Compare = NULL, SortOrder order = SortOrder::Asc);
-    bool32  Init(MemoryArena *arena, uint32 arraySize = 5, bool32 sorted = false, CompareFn Compare = NULL, SortOrder order = SortOrder::Asc);
+    bool32 Init(uint32 arraySize = 5, MemorySize dataSize = 0, bool32 sorted = false, CompareFn Compare = NULL, SortOrder order = SortOrder::Asc);
+    bool32 Init(MemoryArena *arena, uint32 arraySize = 5, MemorySize dataSize = 0, bool32 sorted = false, CompareFn Compare = NULL, SortOrder order = SortOrder::Asc);
     bool32 Extend();
     void Free();
     ArrayItem& operator[](uint32 index);
     ArrayItem* GetItem(uint32 index);
-    bool32 Add(void* data);
-    bool32 AddCopy(uint32 data);
-    bool32 AddCopy(int32 data);
-    bool32 AddCopy(real32 data);
+    void* GetValue(uint32 index);
+    ArrayItem* Add(void* data);
+    ArrayItem* Set(uint32 index, void* data, bool32 fillCeheck = true);
     int32 GetSortedPos(void* data);
-    bool32 AddSorted(void* data);
-    bool32 Insert(uint32 index, void* data);
+    ArrayItem* AddSorted(void* data);
+    ArrayItem* Insert(uint32 index, void* data);
     bool32 Remove(uint32 index);
     bool32 Remove(void* matchData, MatchFn Match);
     void Clear();
@@ -66,6 +73,7 @@ struct Array
     int32 FindSorted(void* matchData);
     int32 Find(void* matchData, CompareFn FindCompare = NULL);
     int32 FindMatch(void* matchData, MatchFn Match);
+    // TODO(dainis): FlatArray* Flatten(MemoryArena arena);
 };
 
 } // namespace

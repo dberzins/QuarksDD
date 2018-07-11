@@ -132,7 +132,8 @@ JValue* AstNode::Resolve(MemoryArena* arena) {
                 memcpy(key, field->JsonField.key->JsonKey.name, field->JsonField.key->JsonKey.len + 1);
                 key[field->JsonField.key->JsonKey.len] = 0;
 
-                result->oValue.fields[key] = field->JsonField.value->Resolve(arena);
+                JValue* value = field->JsonField.value->Resolve(arena);
+                result->oValue.fields.Add(key, value);
 
                 field = field->right;
             }

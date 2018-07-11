@@ -4,11 +4,11 @@
 
 #if !defined(QSYSTEM_H)
 
-#include "../Common.h"
+#include "../QuarksDD.h"
 #include "../Array.h"
 #include "../FlatArray.h"
 #include "../Hashtable.h"
-
+#include "Component.h"
 namespace QuarksDD {
 
 struct System;
@@ -18,6 +18,8 @@ typedef bool32 (*ActionFn)(System* s, void* context);
 typedef bool32 (*FinishFn)(System* s, void* context);
 
 #define GET_SYSTEM(s, Type) (Type*) ContainerOf(s, Type, system)
+#define GET_SYSTEM_COMPONENTS(s, CType) ((System*)s)->GetComponents((u32)CType)
+#define GET_SYSTEM_SCOMPONENTS(s, CType) s->system.GetComponents((u32)CType)
 
 struct System {
     // Data 

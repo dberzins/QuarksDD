@@ -6,26 +6,26 @@
 
 namespace QuarksDD {
 
-bool32  Array::Init(uint32 arraySize, bool32 sorted, CompareFn Compare, SortOrder order)
+bool32  Array::Init(uint32 arraySize, MemorySize dataSize, bool32 sorted, CompareFn Compare, SortOrder order)
 {
     bool32 result = false;
 
     if (!initialized) {
-        // TODO(dainis): Upgrade to local MemoryArena
-        // NOTE: For now we must realay on Allocate calls
+        this->dataSize = dataSize;
         this->sorted = sorted;
         this->Compare = Compare;
         this->order = order;
+
 
         useHeapAlloc = true;
         extend = 5;
         size = arraySize + extend;
         
-        // TODO(dainis): This is temporary fix for AddCopy data allocations!
-        // Should think more cleraly what to do here
-        arena = (MemoryArena*)Allocate(sizeof(MemoryArena));
-        *arena = {};
-        arena->Init();
+        if (dataSize > 0) {
+            dataArena = (MemoryArena*)Allocate(sizeof(MemoryArena));
+            *dataArena = {};
+            dataArena->Init(size * dataSize);
+        }
 
         // Allocate array memory
         MemorySize memSize = size * sizeof(ArrayItem);
@@ -41,11 +41,12 @@ bool32  Array::Init(uint32 arraySize, bool32 sorted, CompareFn Compare, SortOrde
     return result;
 }
 
-bool32  Array::Init(MemoryArena* arena, uint32 arraySize, bool32 sorted, CompareFn Compare, SortOrder order)
+bool32  Array::Init(MemoryArena* arena, uint32 arraySize, MemorySize dataSize,  bool32 sorted, CompareFn Compare, SortOrder order)
 {
     bool32 result = false;
 
     if (!initialized && arena && arena->initialized) {
+        this->dataSize = dataSize;
         this->sorted = sorted;
         this->Compare = Compare;
         this->order = order;
@@ -55,13 +56,15 @@ bool32  Array::Init(MemoryArena* arena, uint32 arraySize, bool32 sorted, Compare
         size = arraySize + extend;
 
         this->arena = arena;
-        items = (ArrayItem*)ArenaPushArray(arena, size, ArrayItem);
+       
+        itemArena = arena->CreateChildArena(size * sizeof(ArrayItem));
+        items = (ArrayItem*)ArenaPushArray(itemArena, size, ArrayItem);
+        
+        if (dataSize > 0) {
+            dataArena = arena->CreateChildArena(size * dataSize);
+        }
+
         if (items) {
-            if (!arena->zero) {
-                // If arena is not zeroing memory then do it by ourselves
-                ZeroArray(size, items);
-            }
-            
             initialized = true;
             result = true;
         }
@@ -77,16 +80,21 @@ void Array::Free() {
                 items = NULL;
                 size = 0;
             }
-            if (arena) {
-                arena->Free();
+            if (dataArena) {
+                dataArena->Free();
+                Deallocate(dataArena);
+                dataArena = NULL;
             }
-            arena = NULL;
         }
         else if (arena) {
-            // TODO(dainis): Upgrade MemoryArena to track allocations/deallocation positions
-            // so memory can bee marked as free in middle of memory block/blocks.
-            // Currently just assume that arena will be freed later by arena owner 
-            // arena->used -= size * sizeof(ArrayItem);
+            if (itemArena) {
+                arena->FreeChildArena(itemArena);
+                itemArena = NULL;
+            }
+            if (dataArena) {
+                arena->FreeChildArena(dataArena);
+                dataArena = NULL;
+            }
         }
     }
 
@@ -104,6 +112,18 @@ ArrayItem* Array::GetItem(uint32 index) {
 
     if (index < count) {
         result = (items + index);
+    }
+    return result;
+}
+
+void* Array::GetValue(uint32 index) {
+    void* result = NULL;
+
+    if (index < count) {
+        ArrayItem* item = items + index;
+        if (item) {
+            result = item->data;
+        }
     }
     return result;
 }
@@ -126,7 +146,7 @@ bool32 Array::Extend() {
     else {
         // Try to resize arena block
         MemorySize memSize = size * sizeof(ArrayItem);
-        moreItems = (ArrayItem*)arena->Resize((uint8*)items, memSize, newMemSize);
+        moreItems = (ArrayItem*)itemArena->Resize((uint8*)items, memSize, newMemSize);
     }
 
     if (moreItems) {
@@ -138,55 +158,79 @@ bool32 Array::Extend() {
     return result;
 }
 
-// TODO(dainis): Add/Insert (int,float, ..) overloaded methods needed to avoid 
-// path pointers for simple types
-bool32 Array::Add(void* data) {
+ArrayItem* Array::Add(void* data) {
+    ArrayItem* result = NULL;
+    ArrayItem* item = NULL;
+
     Assert(count <= size);
 
     if (count >= size)  {
         if (!Extend()) {
-            return false;
+            return NULL;
         }
     }
 
-    // Add item at the end 
-    (items + count)->data = data;
+    item = (items + count);
+
+    if ((dataSize > 0) && dataArena) {
+        if (data) {
+            if (!item->data) {
+                item->data = ArenaPushSize(dataArena, dataSize);
+            }
+            memcpy(item->data, data, dataSize);
+            result = item;
+        }
+    }
+    else {
+        item->data = data;
+        result = item;
+    }
+    
     count++;
 
-    return true;
-}
-
-// TODO/NOTE(dainis): This is experimental - Still deciding if should allow data space allocations inside array
-bool32 Array::AddCopy(uint32 data) {
-    bool32 result = false;
-
-    uint32* value  = (uint32*)arena->Push(sizeof(uint32));
-    *value = data;
-    result = Add(value);
-
     return result;
 }
 
-bool32 Array::AddCopy(int32 data) {
-    bool32 result = false;
+ArrayItem* Array::Set(uint32 index, void* data, bool32 fillCheck) {
+    ArrayItem* result = NULL;
+    ArrayItem* item = NULL;
 
-    int32* value  = (int32*)arena->Push(sizeof(int32));
-    *value = data;
-    result = Add(value);
+    if (index < count && fillCheck) {
+
+        item = (items + index);
+
+        if ((dataSize > 0) && dataArena) {
+            // At this point data memory must be already allocated
+            if (item->data && data) {
+                memcpy(item->data, data, dataSize);
+                result = item;
+            }
+        }
+        else {
+            item->data = data;
+            result = item;
+        }
+    }
+    else if (index < size) {
+
+        item = (items + index);
+
+        if ((dataSize > 0) && dataArena) {
+            // At this point data memory must be already allocated
+            if (item->data && data) {
+                memcpy(item->data, data, dataSize);
+                result = item;
+            }
+        }
+        else {
+            item->data = data;
+            result = item;
+        }
+        count = index + 1;
+    }
 
     return result;
 }
-
-bool32 Array::AddCopy(real32 data) {
-    bool32 result = false;
-
-    real32* value  = (real32*)arena->Push(sizeof(real32));
-    *value = data;
-    result = Add(value);
-
-    return result;
-}
-
 
 int32 Array::GetSortedPos(void* data) {
     Assert(sorted == true);
@@ -219,11 +263,11 @@ int32 Array::GetSortedPos(void* data) {
     return lo;
 }
 
-bool32 Array::AddSorted(void* data) {
+ArrayItem* Array::AddSorted(void* data) {
+    ArrayItem* result = NULL;
+
     Assert(sorted == true);
     Assert(Compare != NULL);
-
-    bool32 result = false;
 
     if (sorted == true && Compare != NULL) {
 
@@ -240,11 +284,12 @@ bool32 Array::AddSorted(void* data) {
     return result;
 }
 
-bool32 Array::Insert(uint32 index, void* data) {
-    bool32 result = false;
+ArrayItem* Array::Insert(uint32 index, void* data) {
+    ArrayItem* result = NULL;
+    ArrayItem* item = NULL;
     
     if (index > count) {
-        return false;
+        return NULL;
     }
     else if (index == count) {
         return Add(data);
@@ -252,7 +297,7 @@ bool32 Array::Insert(uint32 index, void* data) {
     else {
         if (count == size) {
             if (!Extend()) {
-                return false;
+                return NULL;
             }
         }
 
@@ -261,11 +306,25 @@ bool32 Array::Insert(uint32 index, void* data) {
         MemorySize moveSize = (count - index) * sizeof(ArrayItem);
         memmove(dest, source, moveSize);
 
-        (items + index)->data = data;
-        count++;
+        item = (items + index);
 
-        return true;
+        if ((dataSize > 0) && dataArena) {
+            if (data) {
+                if (!item->data) {
+                    item->data = ArenaPushSize(dataArena, dataSize);
+                }
+                memcpy(item->data, data, dataSize);
+                result = item;
+            }
+        }
+        else {
+            item->data = data;
+            result = item;
+        }
+
+        count++;
     }
+
     return result;
 }
 
@@ -276,7 +335,8 @@ bool32 Array::Remove(uint32 index) {
         result = false;
     }
     else if (index == (count - 1)) {
-        *(items + index) = {};
+        // *(items + index) = {};
+        (items + index)->Reset(dataSize); 
         count--;
 
         result = true;
@@ -288,7 +348,9 @@ bool32 Array::Remove(uint32 index) {
         MemorySize moveSize = (count - index) * sizeof(ArrayItem);
         memmove(dest, source, moveSize);
 
-        *(items + count - 1) = {}; 
+        // *(items + count - 1) = {}; 
+        (items + count - 1)->Reset(dataSize); 
+
         count--;
         result = true;
     }
@@ -302,7 +364,7 @@ bool32 Array::Remove(void* matchData, MatchFn Match) {
     if (sorted && matchData && Match) {
         uint32 match = 0;
 
-        uint32 lo =0;
+        uint32 lo = 0;
         uint32 hi = count - 1;
         // Swap match elements to non-match elemtes at the end of array
         while (lo <= hi) {
@@ -329,6 +391,10 @@ bool32 Array::Remove(void* matchData, MatchFn Match) {
         // Shrink used array from end by empty elemts count
         Assert(match <= count);
         if (match > 0 && match <= count) {
+            for (uint32 i = (count - match); i < count; i++) {
+                (items + i)->Reset(dataSize);
+            }
+
             count -= match;
             result = true;
         }
@@ -338,7 +404,9 @@ bool32 Array::Remove(void* matchData, MatchFn Match) {
 }
 
 void Array::Clear() {
-    ZeroArray(count, items);
+    for (uint32 i = 0; i < count; i++) {
+        (items + i)->Reset(dataSize);
+    }
     count = 0;
 }
 
@@ -411,6 +479,7 @@ void Array::QuickSort(CompareFn Compare, SortOrder order)
     int32 lo = 0;
     int32 hi = count-1;
     // Create an auxiliary stack
+    // TODO(dainis): Use tempory memory here?
     int32* stack = (int32*)Allocate((hi - lo + 1) * sizeof(int32));
  
     // initialize top of stack
@@ -488,12 +557,12 @@ bool32 Array::SearchData(Array* searchResults, void* matchData, MatchFn Match) {
 
 bool32 Array::SearchPos(Array* searchPositions, void* matchData, MatchFn Match) {
     bool32 result = false; 
-    if (searchPositions && matchData && Match) {
+    if (searchPositions && matchData && Match && searchPositions->dataSize == sizeof(uint32)) {
         for (uint32 i = 0; i < count; i++) {
             bool32 match = Match(matchData, (items + i)->data);
 
             if (match) {
-                searchPositions->AddCopy(i);
+                searchPositions->Add(&i);
                 result = true;
             }
         }

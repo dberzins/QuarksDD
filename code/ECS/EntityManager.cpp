@@ -99,7 +99,7 @@ bool32 EntityManager::Init() {
         systems.Init(systemArena, EntityManager::maxSystems);
 
         entities = {};
-        entities.Init(entityArena, EntityManager::maxEntities, true, (CompareFn)CompareEntityId, SortOrder::Asc);
+        entities.Init(entityArena, EntityManager::maxEntities, 0, true, (CompareFn)CompareEntityId, SortOrder::Asc);
 
         initialized = true;
         result = true;
@@ -139,7 +139,7 @@ bool32 EntityManager::Init(MemoryArena* systemArena, MemoryArena* entityArena, M
             systems.Init(systemArena, EntityManager::maxSystems);
 
             entities = {};
-            entities.Init(entityArena, EntityManager::maxEntities, true, (CompareFn)CompareEntityId, SortOrder::Asc);
+            entities.Init(entityArena, EntityManager::maxEntities, 0, true, (CompareFn)CompareEntityId, SortOrder::Asc);
 
             initialized = true;
             result = true;
@@ -196,7 +196,7 @@ System* EntityManager::AddSystem(uint32 systemType, System* sys) {
     if (!HasSystem(systemType)) {
         if (sys) {
             sys->Init(systemArena, ++maxSystemId, systemType);
-            systems[sys->type] = sys;
+            systems.Add(sys->type, sys);
             systemFlags |= 1UL << sys->type;
 
             ids.Add(&systemType);
@@ -214,7 +214,7 @@ System* EntityManager::AddSystem(System* sys) {
     if (!HasSystem(sys->type)) {
         if (sys) {
             sys->Init(systemArena, ++maxSystemId, sys->type);
-            systems[sys->type] = sys;
+            systems.Add(sys->type, sys);
             systemFlags |= 1UL << sys->type;
 
             ids.Add(&sys->type);
@@ -260,6 +260,29 @@ bool32 EntityManager::Startup() {
                 s->StartupCallback(s, NULL);
             }
         }
+    }
+
+    return result;
+}
+
+bool32 EntityManager::Startup(uint32 systemFlags, void* context) {
+    bool32 result = false;
+
+    for (uint32 i = 0; i < ids.count; i++) {
+        uint32 type = *(uint32*)ids.GetItem(i);
+
+        if ((systemFlags & (1UL << type)) != 0) {
+            HashItem* item = systems.GetItem(type);
+            if (item && item->data) {
+                System* s = (System*)item->data;
+
+                if (s->StartupCallback) {
+                    s->StartupCallback(s, context);
+                    result = true;
+                }
+            }
+        }
+
     }
 
     return result;
@@ -347,11 +370,15 @@ bool32 EntityManager::Finish() {
 }
 
 Entity* EntityManager::CreateEntity(const char* name) {
+    return this->CreateEntity(name, strlen(name));
+}
+
+Entity* EntityManager::CreateEntity(const char* name, uint32 nameLen) {
     Entity* result = NULL;
     Entity* entity = ArenaPushStruct(entityArena, Entity); 
     if (entity) { 
         *entity = {};
-        entity->Init(entityArena, this, ++maxEntityId, name);
+        entity->Init(entityArena, this, ++maxEntityId, name, nameLen);
         result = entity;
     } 
 

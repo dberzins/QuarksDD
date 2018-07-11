@@ -1,5 +1,5 @@
 #if !defined(QTESTMEMORY_CPP)
-#include <Common.h>
+#include <QuarksDD.h>
 #include <Memory.h>
 #include <stdio.h>
 #include <stdlib.h>

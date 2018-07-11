@@ -13,16 +13,19 @@ bool32 MemoryBlock::Init(MemorySize blockSize, bool32 zero) {
     bool32 result = false;
     if (!initialized) {
         base = (uint8*)Allocate(blockSize);
-        allocated = true;
+        Assert(base);
+        if (base) {
+            allocated = true;
 
-        if (zero) {
-            ZeroSize(blockSize, base);
+            if (zero) {
+                ZeroSize(blockSize, base);
+            }
+        
+            size = blockSize;
+            used = 0;
+            initialized = true;
+            result = true;
         }
-    
-        size = blockSize;
-        used = 0;
-        initialized = true;
-        result = true;
     }
 
     return result;
@@ -84,10 +87,16 @@ bool32 MemoryArena::Init(MemorySize size, bool32 zero, real32 extend) {
 
         if (size > 0) {
             block = (MemoryBlock*) Allocate(sizeof(MemoryBlock));
-            *block = {};
-            block->Init(size, zero);
+            Assert(block);
+            if (block) {
+                *block = {};
+                block->Init(size, zero);
 
-            count++;
+                count++;
+            }
+            else {
+                return false;
+            }
         }
         initialized = true;
         result = true;
@@ -169,28 +178,32 @@ bool32 MemoryArena::Extend(MemorySize size) {
     if (initialized) {
         // If size greater than current block size then use size as base for new block
         size = (block && (block->size > size)) ? block->size : size;
-        size = (MemorySize)((real32)size* extend);
+        size = (MemorySize)((real64)size* (real64)extend);
 
         MemoryBlock* newBlock = (MemoryBlock*)Allocate(sizeof(MemoryBlock));
-        *newBlock = {};
-        newBlock->Init(size, zero);
+        Assert(newBlock);
 
-        if (block) {
-            // Put new block in forward of chain
-            newBlock->prev = block;
-            newBlock->next = NULL;
-            block->next = newBlock;
+        if (newBlock) {
+            *newBlock = {};
+            newBlock->Init(size, zero);
+
+            if (block) {
+                // Put new block in forward of chain
+                newBlock->prev = block;
+                newBlock->next = NULL;
+                block->next = newBlock;
+            }
+            else {
+                // First block
+                newBlock->prev = NULL;
+                newBlock->next = NULL;
+            }
+
+            block = newBlock;
+            count++;
+
+            result = true;
         }
-        else {
-            // First block
-            newBlock->prev = NULL;
-            newBlock->next = NULL;
-        }
-
-        block = newBlock;
-        count++;
-
-        result = true;
     }
 
     return result;        
@@ -331,6 +344,8 @@ MemorySnapshot MemoryArena::CreateSnapshot() {
     snapshot.arena = this;
     snapshot.block = block;
     snapshot.used = block->used;
+    snapshot.lastChild = block->child;
+    snapshot.lastChildCount = block->childCount;
 
     ++snapshots;
 
@@ -351,9 +366,22 @@ void MemoryArena::Rollback(MemorySnapshot snapshot) {
             Free(delBlock);
         }
 
+        // Rollback block child arenas
+        if (iter->childCount > snapshot.lastChildCount) {
+            
+            while (iter->child && iter->child != snapshot.lastChild) {
+                MemoryArena* delArena = iter->child;
+                iter->child = iter->child->next;
+                delArena->Free();        
+            } 
+
+            iter->child = snapshot.lastChild;
+            iter->childCount = snapshot.lastChildCount;
+        }
+
         Assert(iter == snapshot.block);
-        Assert(snapshot.used < iter->used);
-        if (snapshot.used < iter->used) {
+        Assert(snapshot.used <= iter->used);
+        if (snapshot.used <= iter->used) {
             iter->used  = snapshot.used;
             --snapshots;
         }
@@ -361,19 +389,46 @@ void MemoryArena::Rollback(MemorySnapshot snapshot) {
     }
 }
 
-MemoryArena* MemoryArena::CreateChildArena(MemorySize memSize) {
+MemoryArena* MemoryArena::CreateChildArena(MemorySize memSize, bool32 zero) {
     MemoryArena* result = NULL;
     
     if (initialized && memSize > 0) {
-        MemoryBlock* childBlock = ArenaPushStruct(this, MemoryBlock);
-        MemoryArena* childArena = ArenaPushStruct(this, MemoryArena);
-        uint8* childMemory = (uint8*)ArenaPushSize(this, memSize);
+
+        if (!block) {
+            Extend(sizeof(MemoryChunk) + sizeof(MemoryBlock) + sizeof(MemoryArena) + memSize);
+        }
+        
+        // Take snapshot of child arean base memory so it it can be palced in feree chunk list on child arana free.
+        MemoryChunk snapshotChunk = {};
+        snapshotChunk.block = block;
+        snapshotChunk.start = block->used;
+
+        // All child arena base memory shoud be allocated in one block!
+        void* childBase = ArenaPushSize(this, sizeof(MemoryChunk) + sizeof(MemoryBlock) + sizeof(MemoryArena) + memSize);
+
+        if (snapshotChunk.block != block) {
+            // Didn't fit current block - new block was alocated
+            snapshotChunk.block = block;
+            snapshotChunk.start = 0;
+        }
+        snapshotChunk.end = block->used;
+
+        MemoryChunk* childBaseChunk = (MemoryChunk*) childBase;
+        *childBaseChunk = snapshotChunk;
+        MemoryBlock* childBlock = (MemoryBlock*)((uint8*)childBase + sizeof(MemoryChunk));
+        MemoryArena* childArena = (MemoryArena*)((uint8*)childBase + sizeof(MemoryChunk) + sizeof(MemoryBlock));
+        uint8* childMemory = (uint8*)childBase + sizeof(MemoryChunk) + sizeof(MemoryBlock) + sizeof(MemoryArena);
+
+        // MemoryBlock* childBlock = ArenaPushStruct(this, MemoryBlock);
+        // MemoryArena* childArena = ArenaPushStruct(this, MemoryArena);
+        // uint8* childMemory = (uint8*)ArenaPushSize(this, memSize);
         
         *childBlock = {};
         childBlock->Init(childMemory, memSize, zero);
 
         *childArena = {};
         childArena->Init(childBlock, zero);
+        childArena->baseChunk = childBaseChunk;
 
         if (block->child) {
             childArena->next = block->child;
@@ -387,6 +442,19 @@ MemoryArena* MemoryArena::CreateChildArena(MemorySize memSize) {
     return result;
 }
 
+bool32 MemoryArena::FreeChildArena(MemoryArena* childArena) {
+    bool32 result = false;
+    if (childArena) {
+        Assert(childArena->baseChunk);
+        FreeChunk(childArena->baseChunk);
+        childArena->Free();
+        result = true;
+    }
+
+    return result;
+}
+
+// TODO(dainis): Check block child arenas states
 bool32 MemoryArena::FreeChunk(MemoryBlock* chunkBlock, uint8* source, MemorySize size) {
     bool32 result = false;
 
@@ -400,6 +468,24 @@ bool32 MemoryArena::FreeChunk(MemoryBlock* chunkBlock, uint8* source, MemorySize
         chunk->start = source - chunkBlock->base;
         chunk->end = chunk->start + size;
 
+        if (firstFree) {
+            chunk->next = firstFree;
+            firstFree = chunk;
+        }
+        else {
+            firstFree = chunk;
+        }
+
+        ++freeCkunkCount;
+        result = true;
+    }
+    return result;
+}
+
+bool32 MemoryArena::FreeChunk(MemoryChunk* chunk) {
+    bool32 result = false;
+
+    if (chunk) {
         if (firstFree) {
             chunk->next = firstFree;
             firstFree = chunk;

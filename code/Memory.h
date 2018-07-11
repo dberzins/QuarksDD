@@ -4,10 +4,11 @@
 
 #if !defined(QMEMORY_H)
 
-#include "Common.h"
+#include "QuarksDD.h"
 
 namespace QuarksDD {
     #define MEMORY_STATS
+    #define MEMORY_DEBUG
 
     // Defines from: Handmade Hero
     #define ArrayCount(Array) (sizeof(Array) / sizeof((Array)[0]))
@@ -64,6 +65,8 @@ namespace QuarksDD {
         MemoryArena* arena;
         MemoryBlock* block;
         MemorySize used;
+        MemoryArena* lastChild;
+        uint32 lastChildCount;
     };
 
     struct MemoryBlockIndex {
@@ -89,7 +92,8 @@ namespace QuarksDD {
         uint32 freeCkunkCount;
         uint32 simpleResizeCount;
         uint32 resizeCount;
-        MemoryArena *next;
+        MemoryArena* next;
+        MemoryChunk* baseChunk;
 
         // Operations
         bool32 Init(MemorySize size = 0, bool32 zero = true, real32 extend = 1.0f);
@@ -104,8 +108,10 @@ namespace QuarksDD {
         void* Resize(uint8* source, MemorySize size, MemorySize newSize);
         MemorySnapshot CreateSnapshot();
         void Rollback(MemorySnapshot snapshot);
-        MemoryArena* CreateChildArena(MemorySize memSize);
+        MemoryArena* CreateChildArena(MemorySize memSize, bool32 zero = true);
+        bool32 FreeChildArena(MemoryArena* childArena);
         bool32 FreeChunk(MemoryBlock* chunkBlock, uint8* source, MemorySize size);
+        bool32 FreeChunk(MemoryChunk* chunk);
     };
 
 
@@ -204,12 +210,54 @@ namespace QuarksDD {
     {
         void *ptr = malloc(size);
         
+        #ifdef MEMORY_DEBUG
+            printf("Allocated = %s, %i, %s, %p[%li]\n", file, line, func, ptr, size);
+        #endif
+
         #ifdef MEMORY_STATS
-        // printf("Allocated = %s, %i, %s, %p[%li]\n", file, line, func, ptr, size);
-        memStats.alocated++;
-        memStats.totalSize += size;
+            memStats.alocated++;
+            memStats.totalSize += size;
         #endif
      
+        return ptr;
+    }
+
+    #define XAllocate(size) XAllocate_(size, __FILE__, __LINE__, __FUNCTION__)
+    internal void* XAllocate_(MemorySize size, const char *file, int line, const char *func)
+    {
+        void *ptr = Allocate_(size, file, line, func);
+        if (!ptr) {
+            perror("XAllocate failed");
+            exit(1);
+        }
+        return ptr;
+    }
+
+    #define Callocate(count, elemSize) Callocate_(count, elemSize, __FILE__, __LINE__, __FUNCTION__)
+    internal void* Callocate_(SizeType count, SizeType elemSize, const char *file, int line, const char *func)
+    {
+        void *ptr = calloc(count, elemSize);
+        
+        #ifdef MEMORY_DEBUG
+            printf("Allocated = %s, %i, %s, %p[%li]\n", file, line, func, ptr, count * elemSize);
+        #endif
+
+        #ifdef MEMORY_STATS
+            memStats.alocated++;
+            memStats.totalSize += count * elemSize;
+        #endif
+     
+        return ptr;
+    }
+
+    #define XCallocate(count, elemSize) XCallocate_(count, elemSize, __FILE__, __LINE__, __FUNCTION__)
+    internal void* XCallocate_(SizeType count, SizeType elemSize, const char *file, int line, const char *func)
+    {
+        void *ptr = Callocate_(count, elemSize, file, line, func);
+        if (!ptr) {
+            perror("XCallocate failed");
+            exit(1);
+        }
         return ptr;
     }
 
@@ -225,15 +273,28 @@ namespace QuarksDD {
         void *newPtr = realloc(ptr, size);
         if (newPtr) {
 
+            #ifdef MEMORY_DEBUG
+                printf("Deallocated = %s, %i, %s, %p\n", file, line, func, ptr);
+                printf("Reallocated = %s, %i, %s, %p[%li]\n", file, line, func, newPtr, size);
+            #endif
+
             #ifdef MEMORY_STATS
-            // printf("Deallocated = %s, %i, %s, %p\n", file, line, func, ptr);
-            // printf("Reallocated = %s, %i, %s, %p[%li]\n", file, line, func, newPtr, size);
-            memStats.deallocated++; // ols ptr memory is freed by realloc call
-            memStats.alocated++;
-            memStats.totalSize += size;
+                memStats.deallocated++; // ols ptr memory is freed by realloc call
+                memStats.alocated++;
+                memStats.totalSize += size;
             #endif
         }
 
+        return newPtr;
+    }
+
+    #define XReallocate(pointer, size) XReallocate_(pointer, size, __FILE__, __LINE__, __FUNCTION__)
+    internal void* XReallocate_(void* ptr, MemorySize size, const char *file, int line, const char *func)
+    {
+        void *newPtr = Reallocate_(ptr, size, file, line, func);
+        if (!newPtr) {
+            perror("XReallocate failed");
+        }
         return newPtr;
     }
 
@@ -241,9 +302,12 @@ namespace QuarksDD {
     #define Deallocate(pointer) Deallocate_(pointer, __FILE__, __LINE__, __FUNCTION__)
     internal void Deallocate_(void* ptr, const char *file, int line, const char *func)
     {
+        #ifdef MEMORY_DEBUG
+            printf("Deallocated = %s, %i, %s, %p\n", file, line, func, ptr);
+        #endif
+        
         #ifdef MEMORY_STATS
-        // printf("Deallocated = %s, %i, %s, %p\n", file, line, func, ptr);
-        memStats.deallocated++;
+            memStats.deallocated++;
         #endif
 
         free(ptr);
