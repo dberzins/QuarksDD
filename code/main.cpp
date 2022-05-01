@@ -9,6 +9,8 @@
 #include "Memory.h"
 #include "Buffer.h"
 #include "Array.h"
+#include "Graph.h"
+#include "Set.h"
 #include "FlatArray.h"
 #include "Hashtable.h"
 #include "Json\JsonParser.h"
@@ -21,15 +23,106 @@
 #include "ECS\Sample\SampleSystem.h"
 #include "ECS\Sample\SampleRenderSystem.h"
 
+#include "Intern.h"
+
 #include <windows.h>
 using namespace QuarksDD;
 
 namespace QuarksDD {
     MemoryStats memStats = {};
 }
+
+
+int32 CompareSetValues(void* v1, void* v2)
+{
+   int32 result = 0;
+
+   int32 value1 = *(int32*)v1;
+   int32 value2 = *(int32*)v2;
+
+   if (value1 == value2)
+       result = 0;
+   if (value1 < value2)
+       result = -1;
+   if (value1 > value2)
+       result = 1;
+
+   return result;
+}
+
 int32 main(int32 argc, char **argv)
 {
     printf("Current dir: %s\n", argv[0]);
+
+    Set set;
+    set = {};
+    set.Init(CompareSetValues);
+
+    int32 values[] = {5, 3, 3, 8}; 
+    // int32 values[] = {5, 5, 5, 5}; 
+    set.Add(&values[0]);
+    set.Add(&values[1]);
+    set.Add(&values[2]);
+    set.Add(&values[3]);
+
+    set.Free();
+
+
+
+#if 0
+    Edge edges[] = {{0,1,2},{0,2,4},{1,4,3},{2,3,2},{3,1,4},{4,3,3}, {5, 6, 1}};
+    Graph graph;
+    graph = {};
+    graph.Init((Edge*)edges, (int32)ArrayCount(edges));
+
+    Array result;
+    result = {};
+    result.Init(graph.nodeCount, sizeof(int32));
+
+    // graph.DepthSearch(4, &result);
+    graph.BreadthSearch(0, &result);
+    
+    for (uint32 i = 0; i < result.count; i++) {
+        int32* node = (int32*)result[i].data;
+        printf("%d, ", *node);
+    }
+
+#endif
+    // ListIterator* iter = list.head;
+    // while (iter) {
+    //     uint32* node = (uint32*)list.GetItem(iter)->data;
+    //     printf("%d, ", *node);
+    //     iter = iter->next;
+    // }
+
+
+
+    int32 a = 1;
+
+#if 0
+    InternTable table;
+    table = {};
+    table.Init();
+    char str[] = "IcoSphere";
+    const char* s1 = table.InternRange(str, str + strlen(str));
+    const char* s2 = table.InternStr("IcoSphere");
+    Assert(s1==s2);
+
+    // InternTable table;
+    // table = {};
+    // table.Init();
+    // const char* a;
+    // const char* b;
+    // const char* c;
+    // const char* d;
+
+    // a = table.InternStr("IcoSphere");
+    // b = table.InternStr("Sphere");
+    // c = table.InternStr("Circle");
+    // d = table.InternStr("Cylinder");
+#endif
+
+#if 0
     // LARGE_INTEGER StartingTime, InitTime, ExecTime, ElapsedMicroseconds;
     // LARGE_INTEGER Frequency;
 
@@ -163,12 +256,14 @@ int32 main(int32 argc, char **argv)
     entityArena.Free();
     componentArena.Free();
 
+#endif
 
+#if 0
+    JsonParser parser = {};
+    parser.Init("../../tests/data/SampleData.json");
+    JValue* root = parser.Parse();
+    parser.Free();
 
-    // JsonParser parser = {};
-    // parser.Init("../../tests/data/SampleData.json");
-    // JValue* root = parser.Parse();
-    // parser.Free();
-
+#endif
     return 0;
 }

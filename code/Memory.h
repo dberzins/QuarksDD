@@ -10,7 +10,6 @@ namespace QuarksDD {
     #define MEMORY_STATS
     #define MEMORY_DEBUG
 
-    // Defines from: Handmade Hero
     #define ArrayCount(Array) (sizeof(Array) / sizeof((Array)[0]))
 
     #define Kilobytes(value) ((value)*1024LL)

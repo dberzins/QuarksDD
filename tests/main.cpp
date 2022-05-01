@@ -24,9 +24,9 @@ int32 main(int32 argc, char **argv)
     // TestMemory::Run();
     // TestStack::Run();
     // TestBuffer::Run();
-    TestIntern::Run();
+    // TestIntern::Run();
     // TestArray::Run();
-    // TestList::Run();
+    TestList::Run();
     // TestHashtable::Run();
     // TestJson::Run();
     

@@ -19,6 +19,9 @@ bool32 JsonParser::Init(char* filePath) {
             return false;
         }
 
+        symbols = {};
+        symbols.Init();
+
         sourceArena = {};
         sourceArena.Init(++size, true);
 
@@ -49,6 +52,7 @@ void JsonParser::Free() {
         nodesArena.Free();
         sourceArena.Free();
         valuesArena.Free();
+        symbols.Free();
     }
     *this = {};
 }
@@ -97,7 +101,7 @@ AstNode * JsonParser::AddNode(MemoryArena* arena, AstType type, AstNode* parent,
 {
     AstNode *node = ArenaPushStruct(arena, AstNode);
     *node = {};
-
+    node->symbols = &symbols;
     node->type = type;
     node->parent = parent;
     node->level = level;
@@ -123,17 +127,13 @@ AstNode* JsonParser::ParseValue(MemoryArena* arena, JsonTokenizer* tokenizer, As
             token = tokenizer->NextToken(); // Eat Float token
             result->JsonFloat.token = token;
             result->JsonFloat.value = (float)atof(token.text);
-
             break;
         }
         case JsonTokenType::String : {
             result = AddNode(arena, AstType::String, parent, level);
             token = tokenizer->NextToken(); // Eat String token
             result->JsonString.token = token;
-            // NOTE: Trying to avoid mem allocation at this stage
-            result->JsonString.value = token.text;
-            result->JsonString.len = token.len;
-            
+            result->JsonString.value = (char*)symbols.InternRange(token.text, token.text + token.len);
             break;
         }
         case JsonTokenType::OpenBrace : {
@@ -265,8 +265,7 @@ AstNode* JsonParser::ParseField(MemoryArena* arena, JsonTokenizer* tokenizer, As
                 result = AddNode(arena, AstType::Field, parent, level);
                 result->JsonField.key = AddNode(arena, AstType::Key, result, level); 
                 result->JsonField.key->JsonKey.token = token;
-                result->JsonField.key->JsonKey.name = token.text;
-                result->JsonField.key->JsonKey.len = token.len;
+                result->JsonField.key->JsonKey.name = (char*)symbols.InternRange(token.text, token.text + token.len);
 
                 tokenizer->NextToken(); // Eat colon token
                 

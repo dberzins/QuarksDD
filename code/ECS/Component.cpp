@@ -8,13 +8,13 @@ namespace QuarksDD {
 
 bool32 Component::Init(Entity* entity, ComponentId componentId, uint32 componentType) {
     bool32 result = false;
-    if (!initialized) {
-        id = componentId;
-        type = componentType;
-        this->entity = entity;
-        initialized = true;
-        result = true;
-    }
+
+    id = componentId;
+    type = componentType;
+    this->entity = entity;
+    initialized = true;
+    result = true;
+
     return result;
 }
 

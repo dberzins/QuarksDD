@@ -43,6 +43,7 @@ struct InternTable {
             *localArena = {};
             MemorySize memSize = sizeof(Intern) * size + DEAFAULT_INTERN_STR_LEN * size; 
             localArena->Init(memSize);
+            initialized = true;
         }
         return result;
         
@@ -57,6 +58,7 @@ struct InternTable {
 
             MemorySize memSize = sizeof(Intern) * size + DEAFAULT_INTERN_STR_LEN * size; 
             localArena =  arena->CreateChildArena(memSize);
+            initialized = true;
         }
         return result;
         

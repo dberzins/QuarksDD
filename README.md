@@ -260,8 +260,8 @@ int32 CompareValues(void* v1, void* v2)
 {
    int32 result = 0;
 
-   int32 value1 = *(Int32*)v1;
-   int32 value2 = *(Int32*)v2;
+   int32 value1 = *(int32*)v1;
+   int32 value2 = *(int32*)v2;
 
    if (value1 == value2)
        result = 0;
@@ -277,7 +277,7 @@ void TestSortedArray()
 {
     Array a = {};
     // Inits sorted array with descending sort order
-    a.Init(5, true, CompareValues, SortOrder::Desc);
+    a.Init(5, 0, true, CompareValues, SortOrder::Desc);
 
     // Unsorted values
     int32 values[] = {3, 5, 2, 1, 4};
@@ -398,8 +398,8 @@ int32 CompareValues(void* v1, void* v2)
 {
    int32 result = 0;
 
-   int32 value1 = *(Int32*)v1;
-   int32 value2 = *(Int32*)v2;
+   int32 value1 = *(int32*)v1;
+   int32 value2 = *(int32*)v2;
 
    if (value1 == value2)
        result = 0;
@@ -413,13 +413,13 @@ int32 CompareValues(void* v1, void* v2)
 
 void TestListSorting()
 {
-    Array l = {};
+    List l = {};
     l.Init();
 
     // Unsorted values
     int32 values[] = {3, 5, 2, 1, 4};
 
-    for (uint32 i = 0; i < 5; i++>) {
+    for (uint32 i = 0; i < 5; i++) {
         l.Add(&values[i]);
     }
 
@@ -552,7 +552,8 @@ Hashtable items undefined order iterator:
     iter = table.GetIterator();
 
     while(iter) {
-        uint32 value = *(uint32*)iter->item->data;
+        HashItem* item = table.GetItem(iter);
+        uint32 value = *(uint32*)item->data;
         printf("%d, ", value);
         iter = iter->next;
     }
@@ -579,7 +580,7 @@ Hashtable items sorted order iterator:
     iter = table.GetIteratorSorted();
 
     while(iter) {
-        uint32 value = *(uint32*)iter->item->data;
+        uint32 value = *(uint32*)table.GetItem(iter)->data;
         printf("%d, ", value);
         iter = iter->next;
     }

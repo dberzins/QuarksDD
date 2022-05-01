@@ -250,7 +250,7 @@ internal uint32 ListInsertAdd()
 
     int32 values2 [] = {6, 1, 4, 3, 2, 10, 3, 5, 7, 8, 9};
 
-    char result[80];
+    char result[100];
     bool32 pass = true;
     int32 charsWritten  = 0;
     iter = l.head;
@@ -278,6 +278,115 @@ internal uint32 ListInsertAdd()
     return true;
 }
 
+internal int32 ListAddSortedCompareValues(void* v1, void* v2)
+{
+   int32 result = 0;
+
+   int32 value1 = *(int32*)v1;
+   int32 value2 = *(int32*)v2;
+
+   if (value1 == value2)
+       result = 0;
+   if (value1 < value2)
+       result = -1;
+   if (value1 > value2)
+       result = 1;
+
+   return result;
+}
+
+internal uint32 ListInsertAddSorted()
+{
+
+    List l = {};
+    l.Init(10, true, ListAddSortedCompareValues, SortOrder::Asc);
+
+    // Unsorted values
+    int32 values[] = {3, 5, 2, 1, 4};
+
+    for (uint32 i = 0; i < 5; i++) {
+        l.AddSorted(&values[i]);
+    }
+
+
+    // Print list content
+    ListIterator* iter = l.head;
+    int32 values2 [] = {1, 2, 3, 4, 5};
+    uint32 i = 0;
+    bool32 pass = true;
+    char result[100];
+    int32 charsWritten  = 0;
+
+    while (iter) {
+        int32* val = (int32*)l.GetItem(iter)->data;
+
+        if (*val != values2[i]) {
+            pass = false;
+        }
+
+        if (i == 0) {
+            charsWritten += sprintf((result + charsWritten), "%d", *val);
+        }
+        else {
+            charsWritten += sprintf((result + charsWritten), ", %d", *val);
+        }
+
+
+        iter = iter->next;
+        i++;
+    }
+    _Assert(pass, "{1, 2, 3, 4, 5} = {%s}", result);
+
+    l.Free();
+
+    return true;
+}
+internal uint32 ListInsertAddSortedDesc()
+{
+
+    List l = {};
+    l.Init(10, true, ListAddSortedCompareValues, SortOrder::Desc);
+
+    // Unsorted values
+    int32 values[] = {3, 5, 2, 1, 4};
+
+    for (uint32 i = 0; i < 5; i++) {
+        l.AddSorted(&values[i]);
+    }
+
+
+    // Print list content
+    ListIterator* iter = l.head;
+    int32 values2 [] = {5, 4, 3, 2, 1};
+    uint32 i = 0;
+    bool32 pass = true;
+    char result[100];
+    int32 charsWritten  = 0;
+
+    while (iter) {
+        int32* val = (int32*)l.GetItem(iter)->data;
+
+        if (*val != values2[i]) {
+            pass = false;
+        }
+
+        if (i == 0) {
+            charsWritten += sprintf((result + charsWritten), "%d", *val);
+        }
+        else {
+            charsWritten += sprintf((result + charsWritten), ", %d", *val);
+        }
+
+
+        iter = iter->next;
+        i++;
+    }
+    _Assert(pass, "{5, 4, 3, 2, 1} = {%s}", result);
+
+    l.Free();
+
+    return true;
+}
 internal uint32 ListInsertAddArena()
 {
     MemoryArena arena = {};
@@ -303,7 +412,7 @@ internal uint32 ListInsertAddArena()
 
     int32 values2 [] = {6, 1, 4, 3, 2, 10, 3, 5, 7, 8, 9};
 
-    char result[80];
+    char result[100];
     bool32 pass = true;
     int32 charsWritten  = 0;
     iter = l.head;
@@ -346,7 +455,7 @@ internal uint32 ListRemove()
     l.Remove(l.head->next->next->next->next->next); // 6
     l.Remove(l.head); // 1
     l.Remove(l.tail); // 10
-    char result[20];
+    char result[100];
     bool32 pass = l.count == 7;
     int32 charsWritten  = 0;
 
@@ -392,7 +501,7 @@ internal uint32 ListRemoveArena()
     l.Remove(l.head->next->next->next->next->next); // 6
     l.Remove(l.head); // 1
     l.Remove(l.tail); // 10
-    char result[20];
+    char result[100];
     bool32 pass = l.count == 7;
     int32 charsWritten  = 0;
 
@@ -441,7 +550,7 @@ internal uint32 ListRemoveAll()
     }
     _Assert(l.firstFree != NULL, "l.firstFree != NULL");
 
-    char result[20];
+    char result[100];
     bool32 pass = l.count == 0;
     int32 charsWritten  = 0;
 
@@ -492,7 +601,7 @@ internal uint32 ListRemoveAllArena()
     }
     _Assert(l.firstFree != NULL, "l.firstFree != NULL");
 
-    char result[20];
+    char result[100];
     bool32 pass = l.count == 0;
     int32 charsWritten  = 0;
 
@@ -541,7 +650,7 @@ internal uint32 ListClear()
 
     _Assert(l.firstFree != NULL, "l.firstFree != NULL");
 
-    char result[20];
+    char result[100];
     bool32 pass = l.count == 0;
     int32 charsWritten  = 0;
 
@@ -592,7 +701,7 @@ internal uint32 ListClearArena()
 
     _Assert(l.firstFree != NULL, "l.firstFree != NULL");
 
-    char result[20];
+    char result[100];
     bool32 pass = l.count == 0;
     int32 charsWritten  = 0;
 
@@ -981,6 +1090,8 @@ internal void Run()
     _RunTest(ListInsert);
     _RunTest(ListInsertArena);
     _RunTest(ListInsertAdd);
+    _RunTest(ListInsertAddSorted);
+    _RunTest(ListInsertAddSortedDesc);
     _RunTest(ListInsertAddArena);
     _RunTest(ListRemove);
     _RunTest(ListRemoveArena);

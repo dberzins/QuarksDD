@@ -398,12 +398,12 @@ MemoryArena* MemoryArena::CreateChildArena(MemorySize memSize, bool32 zero) {
             Extend(sizeof(MemoryChunk) + sizeof(MemoryBlock) + sizeof(MemoryArena) + memSize);
         }
         
-        // Take snapshot of child arean base memory so it it can be palced in feree chunk list on child arana free.
+        // Take snapshot of child arean base memory so it it can be palced in feree chunk list on child arena free.
         MemoryChunk snapshotChunk = {};
         snapshotChunk.block = block;
         snapshotChunk.start = block->used;
 
-        // All child arena base memory shoud be allocated in one block!
+        // All child arena base memory should be allocated in one block!
         void* childBase = ArenaPushSize(this, sizeof(MemoryChunk) + sizeof(MemoryBlock) + sizeof(MemoryArena) + memSize);
 
         if (snapshotChunk.block != block) {

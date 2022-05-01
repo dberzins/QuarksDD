@@ -21,8 +21,8 @@ namespace QuarksDD {
 
     struct JString {
         // Data
-        char* str;
-        uint32 len;
+        char* str; // Null terminated
+        // uint32 len;
     };
 
     struct JObject {

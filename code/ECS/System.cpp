@@ -179,9 +179,13 @@ bool32 System::HasComponent(uint32 componentType) {
 bool32 System::AddComponent(Component* component) {
     bool32 result = false;
     Assert(arena);
+    Assert(component->entity->status != EntityStatus::Dead);
+
 
     if (arena && component && HasComponent(component->type)) {
         Array* components = GetComponents(component->type);
+        Assert(components->Find(component) < 0);
+        
         if (components) {
             result = components->AddSorted(component) != NULL;
         }
@@ -219,7 +223,7 @@ bool32 System::RemoveComponents(ComponentStatus status) {
         uint32 type = *(uint32*)ids.GetItem(i);
         HashItem* item = componentMap.GetItem(type);
         if (item && item->data) {
-            Array* components = GetComponents(i);
+            Array* components = (Array*)item->data;
             if (components) {
                 components->Remove(&status, (MatchFn)MatchComponentStatus);
                 result = true;

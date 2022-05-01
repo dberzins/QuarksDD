@@ -369,6 +369,63 @@ internal uint32 ArrayRemove()
     return true;
 }
 
+internal int32 ArrayRemoveSortedCompare(void* v1, void* v2)
+{
+   int32 result = 0;
+
+   int32 value1 = *(int32*)v1;
+   int32 value2 = *(int32*)v2;
+
+   if (value1 == value2)
+       result = 0;
+   if (value1 < value2)
+       result = -1;
+   if (value1 > value2)
+       result = 1;
+
+   return result;
+}
+
+internal uint32 ArrayRemoveSorted(){
+    Array a = {};
+    a.Init(20, 0, true, ArrayRemoveSortedCompare, SortOrder::Asc);
+
+
+    int32 values [] = {1, 2, 3, 4, 5, 6, 7, 8, 6278, 12454, 100008, 100009, 100010 };
+
+    for (uint32 i = 0; i<ArrayCount(values); i++) {
+        a.AddSorted(&values[i]);
+    }
+
+    a.Remove(1); // 2
+    a.Remove(8); // 12454
+
+    // a.Remove(0); // 1
+    // a.Remove(a.count-1); // 10
+
+    char result[60];
+    bool32 pass = a.count == 11;
+    int32 charsWritten  = 0;
+    for(uint32 i=0; i<a.count; i++) {
+        int32 val = *(int32*)a[i].data;
+        if (val == 2 || val == 12454) {
+            pass = false;
+        }
+
+        if (i == 0) {
+            charsWritten += sprintf((result + charsWritten), "%d", val);
+        }
+        else {
+            charsWritten += sprintf((result + charsWritten), ", %d", val);
+        }
+    }
+
+    _Assert(pass, "{1, 3, 4, 5, 6, 7, 8, 6278, 100008, 100009, 100010} = {%s}", result);
+
+    a.Free();
+    return true;
+}
+
 internal uint32 ArrayRemoveArena()
 {
     MemoryArena arena = {};
@@ -561,6 +618,7 @@ internal void Run()
     _RunTest(ArrayClearArena);
     _RunTest(ArrayItemValueAssigne);
     _RunTest(ArrayItemValueAssigneArena);
+    _RunTest(ArrayRemoveSorted);
 }
 
 } // namespace

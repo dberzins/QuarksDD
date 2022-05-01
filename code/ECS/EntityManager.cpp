@@ -61,6 +61,10 @@ uint32 EntityManager::maxSystems;
 bool32 EntityManager::Init() {
     bool32 result = false;
     if (!initialized) {
+
+        symbols = {};
+        symbols.Init();
+
         if (!maxSystems) {
             maxSystems = MAX_SYSTEMS;
         }
@@ -111,6 +115,10 @@ bool32 EntityManager::Init() {
 bool32 EntityManager::Init(MemoryArena* systemArena, MemoryArena* entityArena, MemoryArena* componentArena) {
     bool32 result = false;
     if (!initialized) {
+
+        symbols = {};
+        symbols.Init();
+
         if (!maxSystems) {
             maxSystems = MAX_SYSTEMS;
         }
@@ -168,6 +176,8 @@ void EntityManager::Free() {
                 componentArena = NULL;
             }
         }
+
+        symbols.Free();
     }
 
     *this = {};
@@ -369,18 +379,50 @@ bool32 EntityManager::Finish() {
     return result;
 }
 
-Entity* EntityManager::CreateEntity(const char* name) {
-    return this->CreateEntity(name, strlen(name));
+EntityId EntityManager::NextEntityId() {
+    return ++maxEntityId;
 }
 
-Entity* EntityManager::CreateEntity(const char* name, uint32 nameLen) {
+Entity* EntityManager::CreateEntity(const char* name) {
+    return this->CreateEntity(++maxEntityId, name, strlen(name));
+}
+
+Entity* EntityManager::CreateEntity(EntityId id, const char* name) {
+    return this->CreateEntity(id, name, strlen(name));
+}
+
+Entity* EntityManager::CreateEntity(EntityId id, const char* name, uint32 nameLen) {
     Entity* result = NULL;
     Entity* entity = ArenaPushStruct(entityArena, Entity); 
     if (entity) { 
         *entity = {};
-        entity->Init(entityArena, this, ++maxEntityId, name, nameLen);
+        entity->Init(entityArena, this, id, name, nameLen);
         result = entity;
     } 
+
+    return result;
+}
+
+Entity* EntityManager::FindEntity(EntityId id) {
+    Entity* result = NULL;
+
+    Entity e = {};
+    e.id = id;
+    int32 pos = entities.Find(&e);
+    if (pos >= 0) {
+        result = (Entity*)entities.GetValue(pos);
+    }
+
+    return result;
+}
+
+bool32 EntityManager::HasEntity(EntityId id) {
+    bool32 result;
+
+    Entity e = {};
+    e.id = id;
+    int32 pos = entities.Find(&e);
+    result = pos >= 0;
 
     return result;
 }
@@ -390,8 +432,10 @@ bool32 EntityManager::AddEntity(Entity* entity) {
 
     Assert(entity);
     Assert(entity->initialized);
+    Assert(entity->status != EntityStatus::Dead);
+    
     if (entity && entity->initialized) { 
-        entity->SetComponentsStatus(ComponentStatus::Alive);
+        entity->status = EntityStatus::Alive;
 
         // Add entity components to systems
         for (uint32 i = 0; i < entity->ids.count; i++) {
@@ -399,14 +443,17 @@ bool32 EntityManager::AddEntity(Entity* entity) {
             HashItem* item = entity->components.GetItem(type);
             if (item && item->data) {
                 Component* component = (Component*)item->data;
+                component->status = ComponentStatus::Alive;
+                AddComponent(component);
 
-                if (component->status == ComponentStatus::Alive) {
-                    AddComponent(component);
-                }
+                // if (component->status == ComponentStatus::Alive) {
+                //     AddComponent(component);
+                // }
             }
         }
 
-        entities.Add(entity);
+        entities.AddSorted(entity);
+        // entities.Add(entity);
     } 
 
     return result;

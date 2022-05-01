@@ -14,7 +14,6 @@
 
 namespace QuarksDD {
 
-    // Typedefs/Defines from: Handmade Hero
     typedef int8_t int8;
     typedef int16_t int16;
     typedef int32_t int32;
@@ -67,6 +66,8 @@ namespace QuarksDD {
     #define F32Max FLT_MAX
     #define F32Min -FLT_MAX
 
+    // IMPORTANT(dainis): These Casy macros breaks std lib!
+    //  https://hero.handmade.network/forums/code-discussion/t/69-compiling_with_c++_standard_library
     #if !defined(internal)
     #define internal static
     #endif
@@ -81,6 +82,8 @@ namespace QuarksDD {
 
     #define ClampMax(a, max) Minimum(a, max)
     #define ClampMin(a, min) Maximum(a, min)
+
+
 
     // #define AlingnDown(n, a) ((n) & ~((a) - 1))
     // #define AlignUp(n, a) AlignDown((n) + (a) - 1, (a))
@@ -121,7 +124,12 @@ namespace QuarksDD {
         BubbleSort,
         QuickSort
     };
-    
+
+    inline uint32 SafeTruncateUInt64(uint64 value) {
+        Assert(value <= 0xFFFFFFFF);
+        uint32 result = (uint32)value;
+        return result;
+    }
 
     #define IsPowOf2(x) (((x) != 0) && ((x) & ((x)-1)) == 0)
     // NOTE: Rounding functions

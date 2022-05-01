@@ -100,10 +100,10 @@ struct FlatArray
                     Deallocate(removedPos);
                     removedPos = NULL;
                 }
-                if (arena) {
-                    arena->Free();
-                }
-                arena = NULL;
+                // if (arena) {
+                //     arena->Free();
+                // }
+                // arena = NULL;
             }
             else if (arena) {
                 // TODO(dainis): Upgrade MemoryArena to track allocations/deallocation positions

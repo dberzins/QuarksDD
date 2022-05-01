@@ -11,6 +11,7 @@
 #include "../FlatArray.h"
 #include "Component.h"
 #include "Entity.h"
+#include "../Intern.h"
 
 namespace QuarksDD {
 struct System;
@@ -43,6 +44,8 @@ struct System;
 struct EntityManager {
     // Data 
     bool32 initialized;
+    InternTable symbols;
+    
     local_persist uint32 maxComponents;
     local_persist uint32 maxEntities;
     local_persist uint32 maxSystems;
@@ -84,8 +87,12 @@ struct EntityManager {
     bool32 Finish();
 
     // Entities
+    EntityId NextEntityId();
     Entity* CreateEntity(const char* name);
-    Entity* CreateEntity(const char* name, uint32 nameLen);
+    Entity* CreateEntity(EntityId id, const char* name);
+    Entity* CreateEntity(EntityId id, const char* name, uint32 nameLen);
+    Entity* FindEntity(EntityId id);
+    bool32 HasEntity(EntityId id);
     bool32 AddEntity(Entity* entity);
     bool32 RemoveEntity(Entity* entity);
     // Component

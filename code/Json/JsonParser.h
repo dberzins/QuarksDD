@@ -11,12 +11,15 @@
 #include "Json.h"
 #include "JsonToken.h"
 #include "JsonTokenizer.h"
+#include "../Intern.h"
 
 namespace QuarksDD {
     struct JsonParser
     {
         // Data
         bool32 initialized;
+        InternTable symbols;
+        
         JValue* root;
         AstNode* rootNode;
         const char* filePath;

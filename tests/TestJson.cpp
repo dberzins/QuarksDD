@@ -123,7 +123,7 @@ internal uint32 JsonScalars()
     f = root->oValue["field6"];
     _Assert(f != NULL, "f != NULL");
     _Assert(f->type == JValueType::String, "f->type == JValueType::String");
-    _Assert(strncmp(f->sValue.str, "Hello World", f->sValue.len) == 0, "f->sValue.str == \"Hello World\"");
+    _Assert(strncmp(f->sValue.str, "Hello World", strlen(f->sValue.str)) == 0, "f->sValue.str == \"Hello World\"");
 
     parser.Free();
     return true;

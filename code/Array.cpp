@@ -309,10 +309,9 @@ ArrayItem* Array::Insert(uint32 index, void* data) {
         item = (items + index);
 
         if ((dataSize > 0) && dataArena) {
+            item->data = ArenaPushSize(dataArena, dataSize);
+            ZeroSize(dataSize, item->data);
             if (data) {
-                if (!item->data) {
-                    item->data = ArenaPushSize(dataArena, dataSize);
-                }
                 memcpy(item->data, data, dataSize);
                 result = item;
             }
@@ -360,48 +359,69 @@ bool32 Array::Remove(uint32 index) {
 
 bool32 Array::Remove(void* matchData, MatchFn Match) {
     bool32 result = false;
-    Assert(sorted == true);
-    if (sorted && matchData && Match) {
-        uint32 match = 0;
+    if (count > 0) {
 
-        uint32 lo = 0;
-        uint32 hi = count - 1;
-        // Swap match elements to non-match elemtes at the end of array
-        while (lo <= hi) {
-            bool32 matchLo = Match(matchData, (items + lo)->data);
-            if (matchLo) {
-                ++match;
-
-                while (lo < hi) {
-                    bool32 matchHi = Match(matchData, (items + hi)->data);
-                    if (!matchHi) {
-                        Swap(items + lo, items + hi);
-                        --hi;
-                        break;
-                    }
-                    else {
-                        ++match;
-                    }
-                    --hi;
-                } 
+        int32 i = count;
+        do {
+            --i;
+            bool32 found = Match(matchData, (items + i)->data);
+            if (found) {
+                Remove(i);
+                result = true;
             }
-            ++lo;
-        }
-
-        // Shrink used array from end by empty elemts count
-        Assert(match <= count);
-        if (match > 0 && match <= count) {
-            for (uint32 i = (count - match); i < count; i++) {
-                (items + i)->Reset(dataSize);
-            }
-
-            count -= match;
-            result = true;
-        }
+        } while (i > 0);
     }
-
     return result;
 }
+
+// bool32 Array::Remove(void* matchData, MatchFn Match) {
+//     bool32 result = false;
+//     if (count > 0) {
+//         Assert(sorted == true);
+
+//         if (sorted && matchData && Match) {
+//             uint32 match = 0;
+
+//             uint32 lo = 0;
+//             Assert(count > 0); // count must be greater than zero!
+//             uint32 hi = count - 1;
+//             // Swap match elements to non-match elemtes at the end of array
+//             while (lo <= hi) {
+//                 bool32 matchLo = Match(matchData, (items + lo)->data);
+//                 if (matchLo) {
+//                     ++match;
+
+//                     while (lo < hi) {
+//                         bool32 matchHi = Match(matchData, (items + hi)->data);
+//                         if (!matchHi) {
+//                             // IMPORTANT(dainis): This is bug - sorted array will be broken!!!
+//                             Swap(items + lo, items + hi);
+//                             --hi;
+//                             break;
+//                         }
+//                         else {
+//                             ++match;
+//                         }
+//                         --hi;
+//                     } 
+//                 }
+//                 ++lo;
+//             }
+
+//             // Shrink used array from end by empty elemts count
+//             Assert(match <= count);
+//             if (match > 0 && match <= count) {
+//                 for (uint32 i = (count - match); i < count; i++) {
+//                     (items + i)->Reset(dataSize);
+//                 }
+
+//                 count -= match;
+//                 result = true;
+//             }
+//         }
+//     }
+//     return result;
+// }
 
 void Array::Clear() {
     for (uint32 i = 0; i < count; i++) {
@@ -570,6 +590,7 @@ bool32 Array::SearchPos(Array* searchPositions, void* matchData, MatchFn Match) 
     return result; 
 }
 
+// TODO(dainis): Test this in case one record matched to data!
 int32 Array::FindSorted(void* matchData) {
     int32 result = -1; 
     if (matchData && Compare) {
@@ -584,6 +605,7 @@ int32 Array::FindSorted(void* matchData) {
     return result; 
 }
 
+// TODO(dainis): Test this in case one record matched to data!
 int32 Array::Find(void* matchData, CompareFn FindCompare) {
     int32 result = -1; 
     if (matchData) {

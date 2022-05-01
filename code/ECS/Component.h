@@ -16,6 +16,8 @@ struct Entity;
 #define GET_REL_COMPONENT(c, Type, CType) (Type*) GET_ENTITY_COMPONENT(((Component*)c)->entity, Type, CType)
 #define GET_REL_SCOMPONENT(c, Type, CType) (Type*) GET_ENTITY_COMPONENT(c->component.entity, Type, CType)
 
+#define COMPONENT_ID_UNINITIALIZED 0
+#define COMPONENT_TYPE_UNINITIALIZED 0
 typedef uint64 ComponentId;
 
 enum class ComponentStatus {

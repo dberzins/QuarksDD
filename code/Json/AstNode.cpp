@@ -31,21 +31,11 @@ void AstNode::Print() {
                 break;
             }
             case AstType::String : {
-                char* value = (char*)Allocate(node->JsonString.len + 1);
-                memcpy(value, node->JsonString.value, node->JsonString.len);
-                value[node->JsonString.len] = 0;
-                printf("\"%s\"", value);
-                Deallocate(value);
-
+                printf("\"%s\"", node->JsonString.value);
                 break;
             }
             case AstType::Key: {
-                char* key = (char*)Allocate(node->JsonKey.len + 1);
-                memcpy(key, node->JsonKey.name, node->JsonKey.len);
-                key[node->JsonKey.len] = 0;
-                printf("\"%s\" : ", key);
-                Deallocate(key);
-
+                printf("\"%s\" : ", node->JsonKey.name);
                 break;
             }
             case AstType::Field : {
@@ -107,16 +97,11 @@ JValue* AstNode::Resolve(MemoryArena* arena) {
             return result;
         }
         case AstType::String : {
-            char* value = (char*)ArenaPushSize(arena, JsonString.len + 1);
-            memcpy(value, JsonString.value, JsonString.len);
-            value[JsonString.len] = 0;
-
             result = (JValue*)ArenaPushStruct(arena, JValue);
             *result = {};
             
             result->type = JValueType::String;
-            result->sValue.str = value;
-            result->sValue.len = JsonString.len + 1;
+            result->sValue.str = JsonString.value;
             return result;
         }
         case AstType::Object : {
@@ -128,12 +113,8 @@ JValue* AstNode::Resolve(MemoryArena* arena) {
 
             AstNode* field = JsonObject.fields;
             while (field) {
-                char* key = (char*)ArenaPushSize(arena, field->JsonField.key->JsonKey.len+1);
-                memcpy(key, field->JsonField.key->JsonKey.name, field->JsonField.key->JsonKey.len + 1);
-                key[field->JsonField.key->JsonKey.len] = 0;
-
                 JValue* value = field->JsonField.value->Resolve(arena);
-                result->oValue.fields.Add(key, value);
+                result->oValue.fields.Add(field->JsonField.key->JsonKey.name, value);
 
                 field = field->right;
             }

@@ -14,6 +14,8 @@
 
 namespace QuarksDD {
 
+#define MAP_ITEM_UNINITIALIZED 0
+
 internal uint64 HashUint64(uint64 x) {
     x *= 0xff51afd7ed558ccd;
     x ^= x >> 32;
@@ -84,10 +86,10 @@ struct Map {
         }
         Assert(IsPowOf2(size));
         SizeType hash = (SizeType)HashUint64(key);
-        SizeType slot = 0;
+        SizeType slot = hash;
         Assert(count < size);
         for (;;) {
-            slot = hash & (size - 1);
+            slot &= (size - 1);
             if (keys[slot] == key) {
                 return items[slot];
             } else if (!keys[slot]) {
@@ -121,9 +123,9 @@ struct Map {
         Assert(2 * count < size);
         Assert(IsPowOf2(size));
         SizeType hash = (SizeType)HashUint64(key);
-        SizeType slot = 0;
+        SizeType slot = hash;
         for (;;) {
-            slot = hash & (size - 1);
+            slot &= (size - 1);
             if (!keys[slot]) {
                 count++;
                 keys[slot] = key;
@@ -149,118 +151,6 @@ struct Map {
         PutUint64(key, (uint64)(uintptr)item);
     }
 };
-
-// struct Map {
-//     // Data
-//     uint64* keys;
-//     uint64* items;
-//     SizeType count;
-//     SizeType size;
-// };
-
-// // Operations
-// void MapFree(Map* map) {
-//     if (map) {
-//         if (map->keys) {
-//             Deallocate(map->keys);
-//         }
-//         if (map->items) {
-//             Deallocate(map->items);
-//         }
-//         *map = {};
-//     }
-// }
-
-// void MapPutUint64(Map* map, uint64 key, uint64 item);
-
-// void MapExtend(Map* map, SizeType newSize) {
-//     newSize = ClampMin(newSize, 16);
-    
-//     Map newMap = {};
-//     newMap.keys = (uint64*)XCallocate(newSize, sizeof(uint64));
-//     newMap.items = (uint64*)XAllocate(newSize * sizeof(uint64));
-//     newMap.size = newSize;
-
-//     for (SizeType i = 0; i < map->size; i++) {
-//         if (map->keys[i]) {
-//             MapPutUint64(&newMap, map->keys[i], map->items[i]);
-//         }
-//     }
-//     Deallocate((void *)map->keys);
-//     Deallocate(map->items);
-//     *map = newMap;
-// }
-
-// uint64 MapGetUint64(Map*map, uint64 key) {
-//     if (map->count == 0) {
-//         return 0;
-//     }
-//     Assert(IsPowOf2(map->size));
-//     SizeType hash = (SizeType)HashUint64(key);
-//     SizeType slot = 0;
-//     Assert(map->count < map->size);
-//     for (;;) {
-//         slot = hash & (map->size - 1);
-//         if (map->keys[slot] == key) {
-//             return map->items[slot];
-//         } else if (!map->keys[slot]) {
-//             return 0;
-//         }
-//         slot++;
-//     }
-//     return 0;
-// }
-
-// uint64 MapGet(Map* map, void* key) {
-//     return MapGetUint64(map, (uint64)(uintptr)key);
-// }
-
-// void* MapGet(Map* map, uint64 key) {
-//     return (void*)(uintptr)MapGetUint64(map, key);
-// }
-
-// void* MapGet(Map* map, const void* key) {
-//     return (void*)(uintptr)MapGetUint64(map, (uint64)(uintptr)key);
-// }
-
-// void MapPutUint64(Map* map, uint64 key, uint64 item) {
-//     Assert(key);
-//     if (!item) {
-//         return;
-//     }
-//     if (2 * map->count >= map->size) {
-//         MapExtend(map, 2 * map->size);
-//     }
-//     Assert(2 * map->count < map->size);
-//     Assert(IsPowOf2(size));
-//     SizeType hash = (SizeType)HashUint64(key);
-//     SizeType slot = 0;
-//     for (;;) {
-//         slot = hash & (map->size - 1);
-//         if (!map->keys[slot]) {
-//             map->count++;
-//             map->keys[slot] = key;
-//             map->items[slot] = item;
-//             return;
-//         } else if (map->keys[slot] == key) {
-//             map->items[slot] = item;
-//             return;
-//         }
-//         slot++;
-//     }
-// }
-
-// void MapPut(Map* map, void* key, uint64 item) {
-//     MapPutUint64(map, (uint64)(uintptr)key, item);
-// }
-
-// void MapPut(Map* map, const void* key, void* item) {
-//     MapPutUint64(map, (uint64)(uintptr)key, (uint64)(uintptr)item);
-// }
-
-// void MapPut(Map* map, uint64 key, void* item) {
-//     MapPutUint64(map, key, (uint64)(uintptr)item);
-// }
 
 } // namespace
 #define QMAP_H

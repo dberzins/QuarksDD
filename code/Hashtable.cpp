@@ -210,8 +210,10 @@ HashItem* Hashtable::Add(char* key, void* data = NULL) {
     if (result) {
         if (keySize > 0) {
             if (key) {
-                memcpy(result->key, key, keySize -1);
-                result->key[keySize - 1] = 0;
+                // TODO(dainis): Mybe use interning?
+                uint32 keyLen = strlen(key) % (keySize - 1);
+                memcpy(result->key, key, keyLen);
+                result->key[keyLen + 1] = 0;
             }
         }
         else {
@@ -253,8 +255,10 @@ HashItem& Hashtable::operator[](char* key)
     if (result) {
         if (keySize > 0) {
             if (key) {
-                memcpy(result->key, key, keySize - 1);
-                result->key[keySize - 1] = 0;
+                // TODO(dainis): Mybe use interning?
+                uint32 keyLen = strlen(key) % (keySize - 1);
+                memcpy(result->key, key, keyLen);
+                result->key[keyLen + 1] = 0;
             }
         }
         else {

@@ -120,12 +120,20 @@ bool32 List::Attach(ListIterator* pos, ListIterator* iter) {
         result = true;
     }
     else if (pos == NULL) {
-        // if pos NULL then attach as head
-        iter->next = head;
-        iter->prev = NULL;
-        if (head)
-            head->prev = iter;
-        head = iter;
+        if (head == NULL) {
+            iter->next = NULL;
+            iter->prev = NULL;
+            head = iter;
+            tail = iter;
+        }
+        else {
+            // if pos NULL then attach as head
+            iter->next = head;
+            iter->prev = NULL;
+            if (head)
+                head->prev = iter;
+            head = iter;
+        }
     }
 
     return result;
@@ -254,7 +262,8 @@ ListIterator* List::GetSortedPos(void* data) {
                 cmp = (order == SortOrder::Asc) ? cmp : (cmp * -1);
 
                 if (cmp >= 0) {
-                    result = iter->prev;
+                    result = iter;
+                    // result = iter->prev;
                     return result;
                 }
             }

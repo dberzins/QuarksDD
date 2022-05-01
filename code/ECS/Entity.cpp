@@ -32,14 +32,16 @@ bool32 Entity::Init(MemoryArena* arena, EntityManager* entityManager, EntityId e
 bool32 Entity::Init(MemoryArena* arena, EntityManager* entityManager, EntityId entityId, const char* name, uint32 nameLen) {
     bool32 result = false;
     if (!initialized && arena) {
-        id = entityId;
-
-        uint32 nameLength = nameLen % (MAX_ENTITY_NAME-1);
-        memcpy(this->name, name, nameLength);
-        this->name[nameLength] = 0;
-
-        ecs = entityManager;
         this->arena = arena;
+        ecs = entityManager;
+        
+        id = entityId;
+        this->name = ecs->symbols.InternRange(name, name + nameLen);
+
+        // uint32 nameLength = nameLen % (MAX_ENTITY_NAME-1);
+        // memcpy(this->name, name, nameLength);
+        // this->name[nameLength] = 0;
+
 
          // Total ids array size ARRAY_ITEM_SIZE * (EntityManager::maxComponents + ARRAY_EXTEND)
         // MemorySize idsSize = sizeof(ArrayItem) * (EntityManager::maxComponents + 5) + sizeof(id)* EntityManager::maxComponents;
@@ -109,13 +111,26 @@ Component* Entity::GetComponent(uint32 type) {
 //     return result;
 // }
 
+// NOTE: add new component
 bool32 Entity::AddComponent(uint32 componentType, Component* component) {
     bool32 result = false;
+    Assert(componentType != COMPONENT_TYPE_UNINITIALIZED);
     Assert(componentType < EntityManager::maxComponents);
-
+    Assert(!HasComponent(componentType));
+    Assert(this->status != EntityStatus::Dead);
     if (!HasComponent(componentType)) {
         if (component) {
-            component->Init(this, ++ecs->maxComponentId, componentType);
+
+            // NOTE: use component id if its initialized! 
+            ComponentId componentId;
+            if (component->id == COMPONENT_ID_UNINITIALIZED) {
+                componentId = ++ecs->maxComponentId;
+            }
+            else {
+                componentId = component->id;
+            }
+
+            component->Init(this, componentId, componentType);
 
             components.Add(componentType, component);
             flags |= 1ULL << componentType;
@@ -134,12 +149,18 @@ bool32 Entity::AddComponent(uint32 componentType, Component* component) {
     return result;
 }
 
-
+// NOTE: add existing component
 bool32 Entity::AddComponent(Component* component) {
     bool32 result = false;
+    Assert(component != NULL);
+    Assert(component->id != COMPONENT_ID_UNINITIALIZED);
+    Assert(component->type != COMPONENT_TYPE_UNINITIALIZED);
     Assert(component->type < EntityManager::maxComponents);
-
+    Assert(!HasComponent(component->type));
+    Assert(status != EntityStatus::Dead);
     if (!HasComponent(component->type)) {
+        component->entity = this;
+
         components.Add(component->type, component);
         flags |= 1ULL << component->type;
 

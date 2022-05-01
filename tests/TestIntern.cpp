@@ -35,31 +35,40 @@ internal uint32 InternInit()
 
     _Assert(aa == bb, "&aa == &bb");
 
+    return true;
+}
 
+internal uint32 InternInit2()
+{
 
-    // struct BufElemType {
-    //     uint32 x;
-    //     uint32 y;
-    // };
+    InternTable table;
+    table = {};
+    table.Init();
+    const char* a;
+    const char* b;
+    const char* c;
+    const char* d;
 
-    // BufElemType* elements = NULL;
-
-    // BufPush(elements, BufElemType, BufElemType({1, 2}));
-    // _Assert(elements[0].x == 1 && elements[0].y == 2, "elements[0]->x == 1 && elements[0]->y == 2");
-
-    // BufPush(elements, BufElemType, BufElemType({3, 4}));
-    // _Assert(elements[1].x == 3 && elements[1].y == 4, "elements[0]->x == 1 && elements[0]->y == 2");
-
-    // BufferHdr* hdr = BufHdr(elements);
-    // _Assert(hdr->count == 2, "hdr->count == 2");
-
-    // BufClear(elements);
-    // _Assert(hdr->count == 0 && BufCount(elements) == 0, "hdr->count == 0 && BufCount(elements) == 0");
-
-    // BufFree(elements);
-    // _Assert(elements == NULL, "elements == NULL");
+    a = table.InternStr("IcoSphere");
+    b = table.InternStr("Sphere");
+    c = table.InternStr("Circle");
+    d = table.InternStr("Cylinder");
     
-    // _Assert(a.items != NULL, "a.items != NULL");
+    return true;
+}
+
+internal uint32 InternInit3()
+{
+
+    InternTable table;
+    table = {};
+    table.Init();
+    char str[] = "IcoSphere";
+    const char* s1 = table.InternRange(str, str + strlen(str));
+    const char* s2 = table.InternStr("IcoSphere");
+
+    _Assert(s1==s2, "s1 == s2");
+
     return true;
 }
 
@@ -69,6 +78,8 @@ internal void Run()
     printf("Start Intern test group\n");
     printf("===========================================\n");
     _RunTest(InternInit);
+    _RunTest(InternInit2);
+    _RunTest(InternInit3);
 }
 
 } // namespace

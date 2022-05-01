@@ -14,6 +14,13 @@
 
 namespace QuarksDD {
 
+// Simple buffer struct
+struct Buffer {
+    SizeType size;
+    void* buffer;
+};
+
+// Strechy buffer
 struct BufferHdr {
     SizeType size;  // Total capacity in elements
     SizeType count; // Used count in elements

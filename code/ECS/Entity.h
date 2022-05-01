@@ -41,7 +41,8 @@ enum class EntityStatus {
 struct Entity {
     // Data 
     EntityId id;
-    char name[MAX_ENTITY_NAME];
+    const char* name;
+    // char name[MAX_ENTITY_NAME];
     EntityStatus status;
     uint64 flags;
 
@@ -62,7 +63,9 @@ struct Entity {
     bool32 HasComponent(uint32 type);
     Component* GetComponent(uint32 type);
     // bool32 AddComponent(Entity* entity, uint32 componentType, Component* component);
+    // NOTE: add new component
     bool32 AddComponent(uint32 componentType, Component* component);
+    // NOTE: add existing component
     bool32 AddComponent(Component* component);
     bool32 RemoveComponent(Component* component);
     bool32 RemoveComponent(uint32 type);

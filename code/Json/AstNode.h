@@ -8,6 +8,7 @@
 #include "../Memory.h"
 #include "JsonToken.h"
 #include "Json.h"
+#include "../Intern.h"
 
 namespace QuarksDD {
 
@@ -30,19 +31,18 @@ namespace QuarksDD {
         AstNode* right;
         AstNode* parent;
         uint32 level;
+        InternTable* symbols;
 
         union {
             struct
             {
                 JsonToken token;
-                char* name;
-                uint32 len;
+                char* name; // NULL terminated string
             } JsonKey;
 
             struct {
                 JsonToken token;
-                char* value;
-                uint32 len;
+                char* value; // NULL terminated string
             } JsonString;
 
             struct {
