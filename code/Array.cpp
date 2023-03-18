@@ -129,6 +129,8 @@ void* Array::GetValue(uint32 index) {
 }
 
 bool32 Array::Extend() {
+    // IMPORTANNT/TODO(dainis): extend Data arena!!!
+
     bool32 result = false;
     ArrayItem* moreItems = NULL;
 
@@ -173,10 +175,9 @@ ArrayItem* Array::Add(void* data) {
     item = (items + count);
 
     if ((dataSize > 0) && dataArena) {
+        item->data = ArenaPushSize(dataArena, dataSize);
+        ZeroSize(dataSize, item->data);
         if (data) {
-            if (!item->data) {
-                item->data = ArenaPushSize(dataArena, dataSize);
-            }
             memcpy(item->data, data, dataSize);
             result = item;
         }

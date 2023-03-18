@@ -97,7 +97,6 @@ namespace QuarksDD {
     #define OffsetOf(Type, member) ((SizeType)(&((Type *)0)->member))
     #define ContainerOf(pointer, Type, member) (Type *)((uint8 *)(pointer) - OffsetOf(Type, member))
     // http://www.drdobbs.com/a-portable-typeof-operator/184401310
-    // http://collaboration.cmc.ec.gc.ca/science/rpn/biblio/ddj/Website/articles/CUJ/2000/0011/gibbons/list1.htm
     // #define TypePtrOfType(Type) decltype((Type *)0)
     // #define TypeOf(expression) decltype(expression)
 

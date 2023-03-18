@@ -8,7 +8,8 @@
 
 namespace QuarksDD {
     #define MEMORY_STATS
-    #define MEMORY_DEBUG
+    // #define MEMORY_DEBUG
+    
 
     #define ArrayCount(Array) (sizeof(Array) / sizeof((Array)[0]))
 

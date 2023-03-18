@@ -2,10 +2,13 @@
 // Use of this source code is governed by a MIT-style license that can be
 // found in the LICENSE file.
 
+// NOTE: Based on https://www.geeksforgeeks.org/implementing-sets-without-c-stl-containers/ 
 #if !defined(QSET_H)
 
 #include "QuarksDD.h"
 #include "Memory.h"
+#include "Array.h"
+#include "List.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -47,14 +50,16 @@ struct Set
     bool32 initialized;
     bool32 useLocalArena;
     uint32 size;
-    MemoryArena *arena;
+    MemorySize dataSize;
+    MemoryArena* arena;
+    MemoryArena* dataArena;
     SetIterator* root;
     SetIterator* firstFree;
     CompareFn Compare;
     
     // Operations
-    bool32  Init(CompareFn Compare, uint32 setSize = 5);
-    bool32  Init(MemoryArena *arena, CompareFn Compare);
+    bool32  Init(CompareFn Compare, uint32 setSize = 5, MemorySize dataSize = 0);
+    bool32  Init(MemoryArena *arena, CompareFn Compare, MemorySize dataSize = 0);
     void Free();
 
     static SetNode* GetItem(SetIterator* iter) {
@@ -66,11 +71,22 @@ struct Set
     }
     
     SetNode* AllocateNode();
-    SetNode* Insert(SetIterator* pos, void* data);
+    Set* Copy(Set* set, MemoryArena* copyArena = NULL);
+    
     bool32 Contains(SetIterator* pos, void* data);
+    bool32 Contains(void* data);
+    SetNode* Insert(SetIterator* pos, void* data);
     void Add(void* data);
 
-    // void Clear();
+    Set* Union(Set* set, MemoryArena* copyArena = NULL);
+    Set* Difference(Set* set, MemoryArena* copyArena = NULL);
+    Set* Intersect(Set* set, MemoryArena* copyArena = NULL);
+    Array* ToArray(MemoryArena* copyArena = NULL);
+    List* ToList(MemoryArena* copyArena = NULL);
+
+    // Remove
+    // Clear
+    // Equals
 };
 
 } // namespace

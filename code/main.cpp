@@ -32,8 +32,8 @@ namespace QuarksDD {
     MemoryStats memStats = {};
 }
 
-
-int32 CompareSetValues(void* v1, void* v2)
+#if 0
+int32 CompareSetValuesInt32(void* v1, void* v2)
 {
    int32 result = 0;
 
@@ -49,23 +49,100 @@ int32 CompareSetValues(void* v1, void* v2)
 
    return result;
 }
+#endif
+
 
 int32 main(int32 argc, char **argv)
 {
     printf("Current dir: %s\n", argv[0]);
 
-    Set set;
-    set = {};
-    set.Init(CompareSetValues);
+#if 0
+    Set set1;
+    set1 = {};
+    set1.Init(CompareSetValuesInt32);
+    int32 values1[] = {5, 3, 3, 8}; 
 
-    int32 values[] = {5, 3, 3, 8}; 
-    // int32 values[] = {5, 5, 5, 5}; 
-    set.Add(&values[0]);
-    set.Add(&values[1]);
-    set.Add(&values[2]);
-    set.Add(&values[3]);
+    set1.Add(&values1[0]);
+    set1.Add(&values1[1]);
+    set1.Add(&values1[2]);
+    set1.Add(&values1[3]);
 
-    set.Free();
+    Array* r1 = set1.ToArray();
+    printf("Set1:");
+    for(uint32 i=0; i < r1->count; i++) {
+        int32 val = *(int32*)(*r1)[i].data;
+        printf("%d, ", val);
+    }
+    printf("\n");
+
+
+    Set set2;
+    set2 = {};
+    set2.Init(CompareSetValuesInt32);
+    int32 values2[] = {1, 3, 10, 7}; 
+
+    set2.Add(&values2[0]);
+    set2.Add(&values2[1]);
+    set2.Add(&values2[2]);
+    set2.Add(&values2[3]);
+
+    Array* r2 = set2.ToArray();
+    printf("Set2:");
+    for(uint32 i=0; i < r2->count; i++) {
+        int32 val = *(int32*)(*r2)[i].data;
+        printf("%d, ", val);
+    }
+    printf("\n");
+
+
+    Set* set3 = set1.Union(&set2);
+
+    List* result = set3->ToList();
+    printf("List (set1 + set2) union values:");
+    ListIterator* iter = result->head;
+    uint32 i = 0;
+    while (iter) {
+        int32 val = *(int32*)result->GetItem(iter)->data;
+        printf("%d, ", val);
+        iter = iter->next;
+    }
+    printf("\n");
+
+    Array* result2 = set3->ToArray();
+    printf("Array (set1 + set2) union values:");
+    for(uint32 i=0; i < result2->count; i++) {
+        int32 val = *(int32*)(*result2)[i].data;
+        printf("%d, ", val);
+    }
+    printf("\n");
+
+    Set* set4 = set1.Difference(&set2);
+    Array* result3 = set4->ToArray();
+    printf("(set1 - set2) difference values:");
+    for(uint32 i=0; i < result3->count; i++) {
+        int32 val = *(int32*)(*result3)[i].data;
+        printf("%d, ", val);
+    }
+    printf("\n");
+
+    Set* set6 = set2.Difference(&set1);
+    Array* result6 = set6->ToArray();
+    printf("(set2 - set1) difference values:");
+    for(uint32 i=0; i < result6->count; i++) {
+        int32 val = *(int32*)(*result6)[i].data;
+        printf("%d, ", val);
+    }
+    printf("\n");
+
+    Set* set5 = set1.Intersect(&set2);
+    Array* result4 = set5->ToArray();
+    printf("set1, set2 intersect values:");
+    for(uint32 i=0; i < result4->count; i++) {
+        int32 val = *(int32*)(*result4)[i].data;
+        printf("%d, ", val);
+    }
+    printf("\n");
+#endif
 
 
 
